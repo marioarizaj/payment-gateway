@@ -1,18 +1,18 @@
 version: '3'
 
 services:
-#  payment-gateway:
-#    build:
-#      dockerfile: Dockerfile
-#      context: .
-#    env_file:
-#      - .env
-#    restart: on-failure
-#    user: root
-#    ports:
-#      - '8080:8080'
-#    depends_on:
-#      - db
+  payment-gateway:
+    build:
+      dockerfile: Dockerfile
+      context: .
+    env_file:
+      - .env
+    restart: on-failure
+    user: root
+    ports:
+      - '8080:8080'
+    depends_on:
+      - db
   db:
     image: postgres
     environment:
