@@ -1,0 +1,67 @@
+version: '3'
+
+services:
+#  payment-gateway:
+#    build:
+#      dockerfile: Dockerfile
+#      context: .
+#    env_file:
+#      - .env
+#    restart: on-failure
+#    user: root
+#    ports:
+#      - '8080:8080'
+#    depends_on:
+#      - db
+  db:
+    image: postgres
+    environment:
+      POSTGRES_DB: payment_gateway
+      POSTGRES_USER: db_user
+      POSTGRES_PASSWORD: db_pass
+    ports:
+      - "5432:5432"
+  redis:
+    image: redis:7.0.3
+    restart: always
+    ports:
+      - '6379:6379'
+  db-setup:
+    build:
+      dockerfile: ./db/Dockerfile
+      context: .
+    user: root
+    environment:
+      DB_NAME: payment_gateway
+      DB_HOST: db
+      DB_USER: db_user
+      DB_PASSWORD: db_pass
+    depends_on:
+      - db
+  swagger-ui:
+    image: swaggerapi/swagger-ui
+    container_name: swagger_ui_container
+    ports:
+      - "8000:8080"
+    volumes:
+      - ./docs:/usr/share/nginx/html/docs
+    environment:
+      API_URL: docs/openapi.yaml
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus/:/etc/prometheus/
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yaml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    ports:
+      - "9090:9090"
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+
+

@@ -1,0 +1,219 @@
+openapi: 3.0.0
+info:
+  version: 1.0.1
+  title: Payment Gateway Application
+  description: This is the api specification for CKO Payment Gateway task.
+  contact:
+    name: API Support
+    email: marizaj15@hotmail.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+  - url: https://localhost:8080/v1
+    description: Development server
+components:
+  schemas:
+    Payment:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 00d560b5-9e91-4fe7-9ce3-99bcc73f2fdb
+          description: Globally unique id that identifies the payment. This will be used as an idempotency key.
+          format: uuid
+        amount:
+          type: object
+          description: Object that contains the amount along with the currency code.
+          properties:
+            amount_fractional:
+              description: Fractional amount. This will depend on the currency being used. Most currencies have two digits after ,.
+                In case of USD, to represent $10.05 we will send to the server 1005.
+              type: integer
+              example: 1005
+            currency_code:
+              description: The currency code being used.
+              type: string
+              example: USD
+        merchant_id:
+          type: string
+          description: This will be derived from the basic auth parameters. It is the unique identifier of the merchant.
+          example: 4ade760f-269c-4c77-a6bd-3fa48d1d78d7
+          format: uuid
+          readOnly: true
+        payment_status:
+          type: string
+          description: The status of the payment. This will be updated once the transaction is processed by acquiring bank.
+          enum:
+            - processing
+            - succeeded
+            - failed
+          readOnly: true
+        description:
+          description: The description of the payment.
+          type: string
+        card_info:
+          type: object
+          description: Credit card information.
+          properties:
+            card_name:
+              type: string
+              description: The name of the card holder.
+              example: John Doe
+            card_number:
+              type: string
+              description: The card number.
+              example: 378282246310005
+            expiry_month:
+              type: integer
+              description: The month in which the card expires.
+              example: 10
+              minimum: 1
+              maximum: 12
+            expiry_year:
+              description: The year that the card expires.
+              example: 22
+              type: integer
+            cvv:
+              type: string
+              description: The Card Verification Value. This will never be returned or stored by the app. It is only used
+                to communicate with acquiring bank.
+              example: 123
+              writeOnly: true
+              minimum: 3
+              maximum: 4
+        created_at:
+          type: string
+          description: The time that this transaction was created.
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          description: The time that this transaction was updated.
+          format: date-time
+          readOnly: true
+    InternalServerError:
+      type: object
+      description: There is a problem with the server. Please contact support if retrying fails.
+      properties:
+        error:
+          type: string
+          example: "internal server error"
+    BadRequest:
+      type: object
+      description: Incorrect input parameters.
+      properties:
+        error:
+          type: string
+          example: "invalid credit card number"
+    Conflict:
+      type: object
+      description: The payment is duplicate. This might happen for two reasons, either the same uuid is used, 
+                   or a similar payment was made less than 5 minutes ago
+      properties:
+        error:
+          type: string
+          example: "conflict"
+    TooManyRequests:
+      type: object
+      description: You are being rate limited by the api. Too many requests are being sent within a short time span.
+      properties:
+        error:
+          type: string
+          example: "too many requests"
+    NotFound:
+      type: object
+      description: The payment with the given id was not found
+      properties:
+        error:
+          type: string
+          example: "not found"
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+paths:
+  /payments:
+    post:
+      summary: Create a new payment
+      operationId: createPayment
+      security:
+        - basicAuth: [ basicAuth ]
+      requestBody:
+        description: The payment you want to make
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Payment'
+      responses:
+        '201':
+          description: Payment was successfully submitted. 
+                      | Keep polling to get the latest status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '400':
+          description: The request parameters inputted are invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+        '409':
+          description: Payment can not be processed due to conflict issues.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conflict'
+        '429':
+          description: Too many requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequests'
+        '500':
+          description: There is an issue in the server.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+  /payments/{id}:
+    get:
+      security:
+        - basicAuth: [ basicAuth ]
+      summary: Get payment using the id
+      operationId: getPaymentByID
+      parameters:
+        - name: payment_id
+          in: path
+          required: true
+          description: The payment identifier identifier, as payment id
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Payment was successfully submitted.
+                       Keep polling to get the latest status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '404':
+          description: The payment with the given id was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFound'
+        '429':
+          description: Too many requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TooManyRequests'
+        '500':
+          description: There is an issue in the server.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
