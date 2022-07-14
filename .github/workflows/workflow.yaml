@@ -1,20 +1,14 @@
-# This is a basic workflow to help you get started with Actions
-name: CI
+name: Build & Lint & Test
 
-# Controls when the action will run. Triggers the workflow on push or pull request
-# events but only for the master branch
 on:
   push:
     branches:
       - main
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # The "build" workflow
   build:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
-
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -23,13 +17,14 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
-          go-version: '1.18.0' # The Go version to download (if necessary) and use.
-      # Install all the dependencies
+          go-version: '1.18.0'
+      # Run go vet
       - name: Vet code
         run: go vet ./...
       # Run build of the application
       - name: Run build
         run: go build ./...
+  # Lint step
   golangci:
     name: lint
     runs-on: ubuntu-latest
@@ -42,6 +37,7 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         with:
           version: v1.29
+  # Run the tests
   test:
     runs-on: ubuntu-latest
     steps:
@@ -54,4 +50,10 @@ jobs:
           go-version: '1.18.0' # The Go version to download (if necessary) and use.
         # Install all the dependencies
       - name: Run tests
+        env:
+          DATABASE_URL: postgres://db_user:db_pass@localhost:5432/payment_gateway?sslmode=disable&dial_timeout=5s&read_timeout=5s&write_timeout=5s
+          SERVER_PORT: 8080
+          API_KEY_SECRET: super-secret-key
+          ALLOWED_REQUESTS_PER_SECOND: 100
+          REDIS_ADDRESS: localhost:6379
         run:  go test --race -cover ./...
