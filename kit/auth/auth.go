@@ -4,6 +4,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
+	"log"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -16,7 +17,10 @@ func GetHMAC(uuid uuid.UUID, secret string) string {
 	h := hmac.New(sha256.New, []byte(secret))
 
 	// Write Data to it
-	h.Write([]byte(uuid.String()))
+	_, err := h.Write([]byte(uuid.String()))
+	if err != nil {
+		log.Printf("error when writing data to hash: %v", err)
+	}
 	// Get result and encode as hexadecimal string
 	sha := hex.EncodeToString(h.Sum(nil))
 	return sha

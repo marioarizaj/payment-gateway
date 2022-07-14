@@ -4,8 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"go.uber.org/zap"
 	"testing"
+
+	"go.uber.org/zap"
 
 	"github.com/google/uuid"
 	"github.com/marioarizaj/payment_gateway"
@@ -207,7 +208,7 @@ func getDomain(deps dependencies.Dependencies) (*payment.Domain, func(), error) 
 	redisCache := rediscache.NewRedisClient(deps.Redis)
 	d := payment.NewDomain(repo, redisCache, zap.NewNop())
 	return d, func() {
-		tx.Rollback()
+		_ = tx.Rollback()
 		deps.Redis.FlushAll(ctx)
 	}, nil
 }

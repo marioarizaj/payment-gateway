@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"net/http"
+
 	"github.com/marioarizaj/payment_gateway/internal/config"
 	"github.com/marioarizaj/payment_gateway/kit/auth"
 	"github.com/marioarizaj/payment_gateway/kit/limiter"
@@ -8,7 +10,6 @@ import (
 	"github.com/marioarizaj/payment_gateway/kit/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
-	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/marioarizaj/payment_gateway/internal/dependencies"

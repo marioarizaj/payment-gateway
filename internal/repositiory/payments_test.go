@@ -64,7 +64,7 @@ func TestRepo_CreatePayment(t *testing.T) {
 			if !assert.NoError(t, err) {
 				return
 			}
-			defer tx.Rollback()
+			defer func() { _ = tx.Rollback() }()
 			repo := repositiory.NewRepository(tx)
 			err = repo.CreatePayment(ctx, c.payment)
 			if c.expectedError != nil {
@@ -130,7 +130,7 @@ func TestRepo_GetPaymentByID(t *testing.T) {
 			if !assert.NoError(t, err) {
 				return
 			}
-			defer tx.Rollback()
+			defer func() { _ = tx.Rollback() }()
 			repo := repositiory.NewRepository(tx)
 			err = InsertTestPayment(repo, c.payment)
 			if !assert.NoError(t, err) {

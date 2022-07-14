@@ -7,10 +7,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"go.uber.org/zap"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"go.uber.org/zap"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
@@ -111,7 +112,7 @@ func TestHandler_CreatePayment(t *testing.T) {
 			if !assert.NoError(t, err) {
 				return
 			}
-			defer cleanupFunc(deps.DB.(bun.Tx), deps.Redis)
+			defer func() { _ = cleanupFunc(deps.DB.(bun.Tx), deps.Redis) }()
 			r := handlers.NewRouter(cfg, deps, zap.NewNop())
 			req, err := http.NewRequest(http.MethodPost, "/v1/payments", bytes.NewBuffer(c.payload()))
 			if !assert.NoError(t, err) {
@@ -195,7 +196,7 @@ func TestHandler_GetPayment(t *testing.T) {
 			if !assert.NoError(t, err) {
 				return
 			}
-			defer cleanupFunc(deps.DB.(bun.Tx), deps.Redis)
+			defer func() { _ = cleanupFunc(deps.DB.(bun.Tx), deps.Redis) }()
 			err = InsertTestPayment(deps.DB, c.testPayment)
 			if !assert.NoError(t, err) {
 				return

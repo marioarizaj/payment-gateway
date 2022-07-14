@@ -8,7 +8,7 @@ import (
 )
 
 type MockClient struct {
-	paymentsCache               map[string]payment_gateway.Payment
+	// paymentsCache               map[string]payment_gateway.Payment
 	StatusCode                  int
 	SleepIntervalInitialRequest time.Duration
 	SleepIntervalForCallback    time.Duration
