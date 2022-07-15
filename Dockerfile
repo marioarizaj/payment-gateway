@@ -22,9 +22,9 @@ WORKDIR app
 COPY . .
 
 # Build the binary and make it executable.
-RUN GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /go/bin/payment-gateway ./cmd/payment-gateway/main.go
+RUN GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /go/bin/payment_gateway ./cmd/payment_gateway/main.go
 
-RUN chmod +x /go/bin/payment-gateway
+RUN chmod +x /go/bin/payment_gateway
 
 FROM scratch
 # Import the user and group files from the builder.

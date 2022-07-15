@@ -181,7 +181,7 @@ This way, we ensure that any client issues that post the same payment twice with
 4. Even though I have used Prometheus with Graphana for metrics in the app, I would use DataDog in a real life scenario.
    1. It provides a huge range of options for logging, monitoring and tracing applications.
 
-### Bonus Points
+## Bonus Points
 
 ### Authentication
 For authenticating requests from merchants, I have used an API Key based authentication.
