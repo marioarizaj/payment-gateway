@@ -2,7 +2,6 @@ package responses
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 )
 
@@ -86,17 +85,17 @@ func RespondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	_, _ = w.Write(response)
 }
 
-func GetErrorResponseFromStatusCode(code int) error {
+func GetErrorResponseFromStatusCode(code int, err error) error {
 	switch code {
 	case 500:
-		return InternalServerError{Err: errors.New("internal server error")}
+		return InternalServerError{Err: err}
 	case 400:
-		return BadRequestError{Err: errors.New("bad request")}
+		return BadRequestError{Err: err}
 	case 429:
 		return TooManyRequests{}
 	case 409:
 		return ConflictError{}
 	default:
-		return InternalServerError{}
+		return InternalServerError{Err: err}
 	}
 }

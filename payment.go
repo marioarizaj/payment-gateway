@@ -14,6 +14,7 @@ type Payment struct {
 	MerchantID uuid.UUID `json:"merchant_id"`
 	// Amount is the amount that we need to charge to the given card fo this transaction.
 	PaymentStatus string `json:"payment_status"`
+	FailedReason  string `json:"failed_reason,omitempty"`
 	Amount        Amount `json:"amount"`
 	// Description describes the reason why we are charging this given card
 	Description string     `json:"description"`
@@ -50,6 +51,7 @@ func (p Payment) GetStoragePayment() *repositiory.Payment {
 		Amount:          p.Amount.AmountFractional,
 		MerchantID:      p.MerchantID,
 		PaymentStatus:   &p.PaymentStatus,
+		FailedReason:    p.FailedReason,
 		CurrencyCode:    p.Amount.CurrencyCode,
 		Description:     p.Description,
 		CardName:        p.CardInfo.CardName,
@@ -63,6 +65,7 @@ func GetPaymentFromStoredPayment(p *repositiory.Payment) Payment {
 	return Payment{
 		ID:            p.ID,
 		PaymentStatus: *p.PaymentStatus,
+		FailedReason:  p.FailedReason,
 		Amount: Amount{
 			AmountFractional: p.Amount,
 			CurrencyCode:     p.CurrencyCode,

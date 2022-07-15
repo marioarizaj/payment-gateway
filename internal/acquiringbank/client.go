@@ -20,13 +20,13 @@ type paymentsStore struct {
 	lock  *sync.Mutex
 }
 
-func (p *paymentsStore) Set(key string, value payment_gateway.Payment) {
+func (p *paymentsStore) set(key string, value payment_gateway.Payment) {
 	p.lock.Lock()
 	p.cache[key] = value
 	p.lock.Unlock()
 }
 
-func (p *paymentsStore) Get(key string) (payment_gateway.Payment, error) {
+func (p *paymentsStore) get(key string) (payment_gateway.Payment, error) {
 	p.lock.Lock()
 	defer p.lock.Unlock()
 	if value, found := p.cache[key]; found {
@@ -38,6 +38,7 @@ func (p *paymentsStore) Get(key string) (payment_gateway.Payment, error) {
 type MockClient struct {
 	paymentsStore               paymentsStore
 	StatusCode                  int
+	FailedReason                string
 	NewStatus                   string
 	SleepIntervalInitialRequest time.Duration
 	SleepIntervalForCallback    time.Duration
@@ -55,6 +56,7 @@ func NewMockClient(cfg config.MockBankConfig) *MockClient {
 		SleepIntervalInitialRequest: time.Duration(cfg.SleepIntervalInitialRequest) * time.Millisecond,
 		SleepIntervalForCallback:    time.Duration(cfg.SleepIntervalForCallback) * time.Millisecond,
 		ShouldRunCallback:           cfg.ShouldRunCallback,
+		FailedReason:                cfg.FailedReason,
 	}
 }
 
@@ -67,7 +69,10 @@ func (c *MockClient) CreatePayment(payment payment_gateway.Payment, callBack fun
 			if payment.PaymentStatus == "" {
 				payment.PaymentStatus = "success"
 			}
-			c.paymentsStore.Set(payment.ID.String(), payment)
+			if c.FailedReason != "" {
+				payment.FailedReason = c.FailedReason
+			}
+			c.paymentsStore.set(payment.ID.String(), payment)
 			callBack(payment)
 		}
 	}()

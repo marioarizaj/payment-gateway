@@ -29,7 +29,7 @@ var baseTestPayment = payment_gateway.Payment{
 	MerchantID:    uuid.Must(uuid.Parse("6c5a19d0-f132-4a55-93d3-2c00db06d41b")),
 	PaymentStatus: "processing",
 	Amount: payment_gateway.Amount{
-		AmountFractional: 2000,
+		AmountFractional: 2010,
 		CurrencyCode:     "USD",
 	},
 	Description: "Payment test",
@@ -209,11 +209,7 @@ func TestHandler_GetPayment(t *testing.T) {
 			req.Header.Add("Authorization", fmt.Sprintf("Basic %s", basicAuth(c.username, c.password)))
 			res := executeRequest(r, req)
 			assert.Equal(t, c.expectedCode, res.Code)
-			fmt.Println()
-			fmt.Println()
-			fmt.Println(res.Body.String())
-			fmt.Println()
-			fmt.Println()
+
 			if res.Code > 300 {
 				var resBody map[string]interface{}
 				err = json.NewDecoder(res.Body).Decode(&resBody)

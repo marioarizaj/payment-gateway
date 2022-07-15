@@ -97,6 +97,7 @@ func (d *Domain) CreatePayment(ctx context.Context, payment payment_gateway.Paym
 	err = d.CreatePaymentOnAcquiringBank(payment)
 	if err != nil {
 		payment.PaymentStatus = "failed"
+		payment.FailedReason = err.Error()
 		internalErr := d.repo.UpdateStatus(context.Background(), payment.GetStoragePayment())
 		if internalErr != nil {
 			d.logger.Error("Internal database unexpected error", zap.Error(err))
@@ -121,7 +122,7 @@ func (d *Domain) CreatePaymentOnAcquiringBank(payment payment_gateway.Payment) e
 	// Use a circuit breaking library in cases when the acquiring bank is offline
 	res, err := d.CreatePaymentUsingCircuitBreaker(payment, d.callbackFromAcquiringBank)
 	if err != nil {
-		return responses.GetErrorResponseFromStatusCode(res.StatusCode)
+		return responses.GetErrorResponseFromStatusCode(res.StatusCode, err)
 	}
 	_ = res.Body.Close()
 	return nil

@@ -4,7 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"github.com/marioarizaj/payment_gateway/internal/acquiringbank"
 	"testing"
+	"time"
 
 	"go.uber.org/zap"
 
@@ -48,19 +50,92 @@ func TestDomain_CreatePayment(t *testing.T) {
 	}
 
 	cases := []struct {
-		name          string
-		payment       func(domain payment.Domain) (payment_gateway.Payment, error)
-		expectedError error
+		name                 string
+		payment              func(domain payment.Domain) (payment_gateway.Payment, error)
+		expectedError        error
+		sleepTime            time.Duration
+		mockConfig           config.MockBankConfig
+		expectedStatus       string
+		expectedFailedReason string
 	}{
 		{
-			name: "create_payment_success",
+			name:       "create_payment_success",
+			mockConfig: cfg.MockBankConfig,
 			payment: func(domain payment.Domain) (payment_gateway.Payment, error) {
 				p := baseTestPayment
 				return p, nil
 			},
+			expectedStatus: "succeeded",
 		},
 		{
-			name: "create_payment_invalid_card",
+			name:      "create_payment_success_failing_acquiring_bank_async",
+			sleepTime: 2 * time.Second,
+			mockConfig: config.MockBankConfig{
+				StatusCode:                  202,
+				UpdateToStatus:              "failed",
+				SleepIntervalInitialRequest: 10,
+				SleepIntervalForCallback:    50,
+				ShouldRunCallback:           true,
+				FailedReason:                "no sufficient funds",
+			},
+			payment: func(domain payment.Domain) (payment_gateway.Payment, error) {
+				p := baseTestPayment
+				return p, nil
+			},
+			expectedStatus:       "failed",
+			expectedFailedReason: "no sufficient funds",
+		},
+		{
+			name:      "create_payment_success_failing_acquiring_bank_sync",
+			sleepTime: 3 * time.Second,
+			mockConfig: config.MockBankConfig{
+				StatusCode:                  400,
+				UpdateToStatus:              "failed",
+				SleepIntervalInitialRequest: 10,
+				SleepIntervalForCallback:    50,
+				ShouldRunCallback:           false,
+			},
+			expectedError: responses.BadRequestError{Err: errors.New("payment failed to get created on acquring bank, status: 400")},
+			payment: func(domain payment.Domain) (payment_gateway.Payment, error) {
+				p := baseTestPayment
+				return p, nil
+			},
+			expectedStatus: "failed",
+		},
+		{
+			name:      "create_payment_timeout_circuit_breaker",
+			sleepTime: 3 * time.Second,
+			mockConfig: config.MockBankConfig{
+				UpdateToStatus:              "failed",
+				SleepIntervalInitialRequest: 100000,
+				ShouldRunCallback:           false,
+			},
+			expectedError: responses.InternalServerError{Err: errors.New("fallback failed with 'hystrix: timeout'. run error was 'hystrix: timeout'")},
+			payment: func(domain payment.Domain) (payment_gateway.Payment, error) {
+				p := baseTestPayment
+				return p, nil
+			},
+			expectedStatus: "failed",
+		},
+		{
+			name:      "create_payment_timeout_circuit_breaker_retry",
+			sleepTime: 3 * time.Second,
+			mockConfig: config.MockBankConfig{
+				StatusCode:                  500,
+				UpdateToStatus:              "failed",
+				SleepIntervalInitialRequest: 10,
+				ShouldRunCallback:           false,
+			},
+			expectedError: responses.InternalServerError{Err: errors.New("fallback failed with 'status was 500'. run error was 'status was 500'")},
+			payment: func(domain payment.Domain) (payment_gateway.Payment, error) {
+				p := baseTestPayment
+				return p, nil
+			},
+			expectedStatus: "failed",
+		},
+		{
+			name:       "create_payment_invalid_card",
+			mockConfig: cfg.MockBankConfig,
 			payment: func(domain payment.Domain) (payment_gateway.Payment, error) {
 				p := baseTestPayment
 				p.CardInfo.ExpiryYear = 21
@@ -69,7 +144,8 @@ func TestDomain_CreatePayment(t *testing.T) {
 			expectedError: responses.BadRequestError{Err: errors.New("credit card has expired")},
 		},
 		{
-			name: "create_payment_duplicate_transaction",
+			name:       "create_payment_duplicate_transaction",
+			mockConfig: cfg.MockBankConfig,
 			payment: func(domain payment.Domain) (payment_gateway.Payment, error) {
 				ctx := context.Background()
 				p := baseTestPayment
@@ -86,7 +162,8 @@ func TestDomain_CreatePayment(t *testing.T) {
 			expectedError: responses.ConflictError{},
 		},
 		{
-			name: "create_payment_duplicate_transaction_caught_in_redis",
+			name:       "create_payment_duplicate_transaction_caught_in_redis",
+			mockConfig: cfg.MockBankConfig,
 			payment: func(domain payment.Domain) (payment_gateway.Payment, error) {
 				ctx := context.Background()
 				p := baseTestPayment
@@ -104,6 +181,7 @@ func TestDomain_CreatePayment(t *testing.T) {
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
+			deps.BankClient = acquiringbank.NewMockClient(c.mockConfig)
 			d, cleanFn, err := getDomain(deps)
 			if !assert.NoError(t, err) {
 				return
@@ -128,6 +206,15 @@ func TestDomain_CreatePayment(t *testing.T) {
 			p.UpdatedAt = createdPayment.UpdatedAt
 
 			assert.Equal(t, p, createdPayment)
+			time.Sleep(time.Second)
+			// Let's wait a second, for the callback to update the database
+			newPayment, err := d.GetPayment(context.Background(), p.ID)
+			if c.expectedError != nil {
+				assert.Equal(t, c.expectedError, err)
+				return
+			}
+			assert.Equal(t, c.expectedStatus, newPayment.PaymentStatus)
+			assert.Equal(t, c.expectedFailedReason, newPayment.FailedReason)
 		})
 	}
 }

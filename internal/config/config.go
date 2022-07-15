@@ -63,6 +63,7 @@ type MockBankConfig struct {
 	SleepIntervalInitialRequest int    `envconfig:"SLEEP_INTERVAL_INITIAL_REQUEST" default:"10"`
 	SleepIntervalForCallback    int    `envconfig:"SLEEP_INTERVAL_FOR_CALLBACK" default:"200"`
 	ShouldRunCallback           bool   `envconfig:"SHOULD_RUN_CALLBACK" default:"true"`
+	FailedReason                string `envconfig:"MOCK_FAILED_REASON"`
 }
 
 type Config struct {
@@ -78,18 +79,19 @@ type Config struct {
 
 func LoadConfig() (Config, error) {
 	appEnv := getAppEnv()
-	envPath := ""
+	var envPath []string
 	if appEnv == testEnv || appEnv == devEnv {
+		// To run this locally, we need to open .env
 		err := filepath.Walk(os.ExpandEnv("$GOPATH/src"), func(path string, info fs.FileInfo, err error) error {
 			if strings.Contains(path, projectName) && strings.Contains(path, ".env") && !strings.Contains(path, "docker") {
-				envPath = path
+				envPath = append(envPath, path)
 			}
 			return nil
 		})
 		if err != nil {
 			log.Println("could not open .env file, skipping")
 		}
-		err = godotenv.Load(envPath)
+		err = godotenv.Load(envPath...)
 		if err != nil {
 			log.Println("could not open .env file, skipping")
 		}

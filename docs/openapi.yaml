@@ -108,8 +108,8 @@ components:
           example: "invalid credit card number"
     Conflict:
       type: object
-      description: The payment is duplicate. This might happen for two reasons, either the same uuid is used, 
-                   or a similar payment was made less than 5 minutes ago
+      description: The payment is duplicate. This might happen for two reasons, either the same uuid is used,
+        or a similar payment was made less than 5 minutes ago
       properties:
         error:
           type: string
@@ -147,8 +147,8 @@ paths:
               $ref: '#/components/schemas/Payment'
       responses:
         '201':
-          description: Payment was successfully submitted. 
-                      | Keep polling to get the latest status.
+          description: Payment was successfully submitted.
+            | Keep polling to get the latest status.
           content:
             application/json:
               schema:
@@ -194,7 +194,7 @@ paths:
       responses:
         '200':
           description: Payment was successfully submitted.
-                       Keep polling to get the latest status.
+            Keep polling to get the latest status.
           content:
             application/json:
               schema:
