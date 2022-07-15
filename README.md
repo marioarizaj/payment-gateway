@@ -1,5 +1,7 @@
 # Payment Gateway
 
+![Payment Gateway](https://github.com/marioarizaj/payment_gateway/actions/workflows/workflow.yaml/badge.svg)
+
 E-Commerce is experiencing exponential growth and merchants who sell their goods or services online need a way to easily collect money from their customers.
 Payment Gateway is an API based application that will allow a merchant to offer a way for their shoppers to pay for their product.
 
