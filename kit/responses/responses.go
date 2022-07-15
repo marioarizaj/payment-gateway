@@ -22,8 +22,7 @@ func (e BadRequestError) Response(w http.ResponseWriter) {
 	RespondWithError(w, http.StatusBadRequest, e.Error())
 }
 
-type TooManyRequests struct {
-}
+type TooManyRequests struct{}
 
 func (e TooManyRequests) Error() string {
 	return "too many requests"

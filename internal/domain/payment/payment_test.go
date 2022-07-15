@@ -4,9 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"github.com/marioarizaj/payment-gateway/internal/acquiringbank"
 	"testing"
 	"time"
+
+	"github.com/marioarizaj/payment-gateway/internal/acquiringbank"
 
 	"go.uber.org/zap"
 

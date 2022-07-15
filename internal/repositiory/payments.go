@@ -14,9 +14,8 @@ type Payment struct {
 	Amount        int64
 	MerchantID    uuid.UUID
 	PaymentStatus string
-
-	FailedReason string
-	CurrencyCode string
+	FailedReason  string
+	CurrencyCode  string
 	// Description describes the reason why we are charging this given card
 	Description string
 	// CardName represents the name displayed on the card

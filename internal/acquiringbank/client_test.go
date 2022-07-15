@@ -1,13 +1,14 @@
 package acquiringbank_test
 
 import (
+	"testing"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/marioarizaj/payment-gateway"
 	"github.com/marioarizaj/payment-gateway/internal/acquiringbank"
 	"github.com/marioarizaj/payment-gateway/internal/config"
 	"github.com/stretchr/testify/assert"
-	"testing"
-	"time"
 )
 
 func TestMockClient_CreatePayment(t *testing.T) {

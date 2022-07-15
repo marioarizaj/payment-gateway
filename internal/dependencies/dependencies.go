@@ -3,6 +3,7 @@ package dependencies
 import (
 	"context"
 	"database/sql"
+
 	"github.com/afex/hystrix-go/hystrix"
 	"github.com/go-redis/redis_rate/v9"
 	"github.com/marioarizaj/payment-gateway/internal/acquiringbank"

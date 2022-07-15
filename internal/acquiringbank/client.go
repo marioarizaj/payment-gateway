@@ -3,11 +3,12 @@ package acquiringbank
 import (
 	"bytes"
 	"fmt"
-	"github.com/marioarizaj/payment-gateway/internal/config"
 	"io"
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/marioarizaj/payment-gateway/internal/config"
 
 	"github.com/marioarizaj/payment-gateway"
 )
