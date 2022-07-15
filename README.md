@@ -139,7 +139,7 @@ type MockBankConfig struct {
 	FailedReason                string `envconfig:"MOCK_FAILED_REASON"`
 }
 ```
-You can mock the following behaviours want with the above config. 
+You can mock the following behaviours with the above config. 
 * Simulate a timeout to test circuit breaking functionality
 * Return a synchronous error when the request is sent. 
 * Return a `202 Accepted` when the request is initially sent, and use the callback to update the payment to failed/succeeded.
