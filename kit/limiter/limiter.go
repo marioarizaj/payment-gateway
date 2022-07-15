@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/go-redis/redis_rate/v9"
-	"github.com/marioarizaj/payment_gateway/kit/ctx"
-	"github.com/marioarizaj/payment_gateway/kit/responses"
+	"github.com/marioarizaj/payment-gateway/kit/ctx"
+	"github.com/marioarizaj/payment-gateway/kit/responses"
 )
 
 func Middleware(l *redis_rate.Limiter, rate int) func(next http.Handler) http.Handler {

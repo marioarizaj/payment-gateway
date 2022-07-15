@@ -8,9 +8,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/marioarizaj/payment_gateway"
-	ctx2 "github.com/marioarizaj/payment_gateway/kit/ctx"
-	"github.com/marioarizaj/payment_gateway/kit/responses"
+	"github.com/marioarizaj/payment-gateway"
+	ctx2 "github.com/marioarizaj/payment-gateway/kit/ctx"
+	"github.com/marioarizaj/payment-gateway/kit/responses"
 )
 
 func (h *Handler) CreatePayment(w http.ResponseWriter, r *http.Request) {

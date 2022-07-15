@@ -2,9 +2,9 @@ package acquiringbank_test
 
 import (
 	"github.com/google/uuid"
-	"github.com/marioarizaj/payment_gateway"
-	"github.com/marioarizaj/payment_gateway/internal/acquiringbank"
-	"github.com/marioarizaj/payment_gateway/internal/config"
+	"github.com/marioarizaj/payment-gateway"
+	"github.com/marioarizaj/payment-gateway/internal/acquiringbank"
+	"github.com/marioarizaj/payment-gateway/internal/config"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"

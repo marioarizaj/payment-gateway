@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/marioarizaj/payment_gateway/internal/creditcard"
+	"github.com/marioarizaj/payment-gateway/internal/creditcard"
 	"github.com/stretchr/testify/assert"
 )
 

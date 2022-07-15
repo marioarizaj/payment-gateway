@@ -3,19 +3,19 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/marioarizaj/payment_gateway/internal/config"
-	"github.com/marioarizaj/payment_gateway/kit/auth"
-	"github.com/marioarizaj/payment_gateway/kit/limiter"
-	"github.com/marioarizaj/payment_gateway/kit/logging"
-	"github.com/marioarizaj/payment_gateway/kit/prometheus"
+	"github.com/marioarizaj/payment-gateway/internal/config"
+	"github.com/marioarizaj/payment-gateway/kit/auth"
+	"github.com/marioarizaj/payment-gateway/kit/limiter"
+	"github.com/marioarizaj/payment-gateway/kit/logging"
+	"github.com/marioarizaj/payment-gateway/kit/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 
 	"github.com/gorilla/mux"
-	"github.com/marioarizaj/payment_gateway/internal/dependencies"
-	"github.com/marioarizaj/payment_gateway/internal/domain/payment"
-	"github.com/marioarizaj/payment_gateway/internal/repositiory"
-	"github.com/marioarizaj/payment_gateway/kit/rediscache"
+	"github.com/marioarizaj/payment-gateway/internal/dependencies"
+	"github.com/marioarizaj/payment-gateway/internal/domain/payment"
+	"github.com/marioarizaj/payment-gateway/internal/repositiory"
+	"github.com/marioarizaj/payment-gateway/kit/rediscache"
 )
 
 type Handler struct {

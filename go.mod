@@ -1,4 +1,4 @@
-module github.com/marioarizaj/payment_gateway
+module github.com/marioarizaj/payment-gateway
 
 go 1.18
 

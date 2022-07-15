@@ -4,20 +4,20 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"github.com/marioarizaj/payment_gateway/internal/acquiringbank"
+	"github.com/marioarizaj/payment-gateway/internal/acquiringbank"
 	"testing"
 	"time"
 
 	"go.uber.org/zap"
 
 	"github.com/google/uuid"
-	"github.com/marioarizaj/payment_gateway"
-	"github.com/marioarizaj/payment_gateway/internal/config"
-	"github.com/marioarizaj/payment_gateway/internal/dependencies"
-	"github.com/marioarizaj/payment_gateway/internal/domain/payment"
-	"github.com/marioarizaj/payment_gateway/internal/repositiory"
-	"github.com/marioarizaj/payment_gateway/kit/rediscache"
-	"github.com/marioarizaj/payment_gateway/kit/responses"
+	"github.com/marioarizaj/payment-gateway"
+	"github.com/marioarizaj/payment-gateway/internal/config"
+	"github.com/marioarizaj/payment-gateway/internal/dependencies"
+	"github.com/marioarizaj/payment-gateway/internal/domain/payment"
+	"github.com/marioarizaj/payment-gateway/internal/repositiory"
+	"github.com/marioarizaj/payment-gateway/kit/rediscache"
+	"github.com/marioarizaj/payment-gateway/kit/responses"
 	"github.com/stretchr/testify/assert"
 )
 

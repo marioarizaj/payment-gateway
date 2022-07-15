@@ -5,10 +5,10 @@ import (
 	"database/sql"
 	"github.com/afex/hystrix-go/hystrix"
 	"github.com/go-redis/redis_rate/v9"
-	"github.com/marioarizaj/payment_gateway/internal/acquiringbank"
+	"github.com/marioarizaj/payment-gateway/internal/acquiringbank"
 
 	"github.com/go-redis/redis/v8"
-	"github.com/marioarizaj/payment_gateway/internal/config"
+	"github.com/marioarizaj/payment-gateway/internal/config"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/driver/pgdriver"

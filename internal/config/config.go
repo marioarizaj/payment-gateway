@@ -16,7 +16,7 @@ import (
 const (
 	devEnv      = "dev"
 	testEnv     = "test"
-	projectName = "payment_gateway"
+	projectName = "payment-gateway"
 )
 
 type DatabaseConfig struct {

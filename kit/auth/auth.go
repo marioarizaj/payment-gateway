@@ -8,8 +8,8 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
-	"github.com/marioarizaj/payment_gateway/kit/ctx"
-	"github.com/marioarizaj/payment_gateway/kit/responses"
+	"github.com/marioarizaj/payment-gateway/kit/ctx"
+	"github.com/marioarizaj/payment-gateway/kit/responses"
 )
 
 func GetHMAC(uuid uuid.UUID, secret string) string {

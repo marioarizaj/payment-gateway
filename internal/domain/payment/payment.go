@@ -14,10 +14,10 @@ import (
 	"github.com/eapache/go-resiliency/retrier"
 	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
-	"github.com/marioarizaj/payment_gateway"
-	"github.com/marioarizaj/payment_gateway/internal/creditcard"
-	"github.com/marioarizaj/payment_gateway/internal/repositiory"
-	"github.com/marioarizaj/payment_gateway/kit/responses"
+	"github.com/marioarizaj/payment-gateway"
+	"github.com/marioarizaj/payment-gateway/internal/creditcard"
+	"github.com/marioarizaj/payment-gateway/internal/repositiory"
+	"github.com/marioarizaj/payment-gateway/kit/responses"
 	"github.com/uptrace/bun/driver/pgdriver"
 )
 

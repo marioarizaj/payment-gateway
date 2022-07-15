@@ -10,9 +10,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/marioarizaj/payment_gateway/internal/config"
-	"github.com/marioarizaj/payment_gateway/internal/dependencies"
-	"github.com/marioarizaj/payment_gateway/internal/handlers"
+	"github.com/marioarizaj/payment-gateway/internal/config"
+	"github.com/marioarizaj/payment-gateway/internal/dependencies"
+	"github.com/marioarizaj/payment-gateway/internal/handlers"
 	"go.uber.org/zap"
 )
 

@@ -24,7 +24,7 @@ Payment Gateway is an API based application that will allow a merchant to offer 
 ## Project Structure
 ```bash
 ├── cmd # Each standalone service will be under cmd
-│   └── payment_gateway # The payment gateway main package containing main file
+│   └── payment-gateway # The payment gateway main package containing main file
 ├── db # Contains the Dockerfile for setting up Postgres with migrations and seed data
 ├── docs # It contains openapi3 spec for api documentation
 ├── internal # All internal modules of the project are inside here
@@ -56,8 +56,8 @@ There are two ways that we can run the project, one is using `docker-compose` an
 When `docker` is used, you get some extra out of the box functionality like `Swagger-UI`, `Prometheus`, `Graphana` and a migrated database with some seeds.
 The first step is the same for both options:
 * Make sure `$GOPATH` is set. The project uses go-modules, so this step is optional. Having $GOPATH set means a simple way to find .env file. 
-* Clone the repository under `$GOPATH/src/github.com/marioarizaj` running `git clone https://github.com/marioarizaj/payment_gateway.git`
-* A new folder should have been created under `$GOPATH/src/github.com/marioarizaj` called `payment_gateway`.
+* Clone the repository under `$GOPATH/src/github.com/marioarizaj` running `git clone https://github.com/marioarizaj/payment-gateway.git`
+* A new folder should have been created under `$GOPATH/src/github.com/marioarizaj` called `payment-gateway`.
 ### Docker Compose
 1. Install [docker](https://docs.docker.com/get-docker/).
    1. If you have an old version of docker, then you need to install [docker-compose](https://docs.docker.com/compose/install/) separately.

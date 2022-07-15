@@ -16,7 +16,7 @@ services:
   db:
     image: postgres
     environment:
-      POSTGRES_DB: payment_gateway
+      POSTGRES_DB: payment-gateway
       POSTGRES_USER: db_user
       POSTGRES_PASSWORD: db_pass
     ports:
@@ -32,7 +32,7 @@ services:
       context: .
     user: root
     environment:
-      DB_NAME: payment_gateway
+      DB_NAME: payment-gateway
       DB_HOST: db
       DB_USER: db_user
       DB_PASSWORD: db_pass

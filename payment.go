@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/marioarizaj/payment_gateway/internal/repositiory"
+	"github.com/marioarizaj/payment-gateway/internal/repositiory"
 )
 
 // Payment represents a transaction request object received from a Merchant

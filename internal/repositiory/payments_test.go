@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/marioarizaj/payment_gateway/internal/config"
-	"github.com/marioarizaj/payment_gateway/internal/dependencies"
-	"github.com/marioarizaj/payment_gateway/internal/repositiory"
+	"github.com/marioarizaj/payment-gateway/internal/config"
+	"github.com/marioarizaj/payment-gateway/internal/dependencies"
+	"github.com/marioarizaj/payment-gateway/internal/repositiory"
 	"github.com/stretchr/testify/assert"
 )
 
