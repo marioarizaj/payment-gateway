@@ -1,7 +1,11 @@
 package acquiringbank
 
 import (
+	"bytes"
 	"errors"
+	"fmt"
+	"github.com/marioarizaj/payment_gateway/internal/config"
+	"io"
 	"net/http"
 	"sync"
 	"time"
@@ -34,10 +38,24 @@ func (p *paymentsStore) Get(key string) (payment_gateway.Payment, error) {
 type MockClient struct {
 	paymentsStore               paymentsStore
 	StatusCode                  int
-	newStatus                   string
+	NewStatus                   string
 	SleepIntervalInitialRequest time.Duration
 	SleepIntervalForCallback    time.Duration
 	ShouldRunCallback           bool
+}
+
+func NewMockClient(cfg config.MockBankConfig) *MockClient {
+	return &MockClient{
+		paymentsStore: paymentsStore{
+			cache: map[string]payment_gateway.Payment{},
+			lock:  &sync.Mutex{},
+		},
+		StatusCode:                  cfg.StatusCode,
+		NewStatus:                   cfg.UpdateToStatus,
+		SleepIntervalInitialRequest: time.Duration(cfg.SleepIntervalInitialRequest) * time.Millisecond,
+		SleepIntervalForCallback:    time.Duration(cfg.SleepIntervalForCallback) * time.Millisecond,
+		ShouldRunCallback:           cfg.ShouldRunCallback,
+	}
 }
 
 func (c *MockClient) CreatePayment(payment payment_gateway.Payment, callBack func(payment payment_gateway.Payment)) http.Response {
@@ -45,7 +63,8 @@ func (c *MockClient) CreatePayment(payment payment_gateway.Payment, callBack fun
 	go func() {
 		time.Sleep(c.SleepIntervalForCallback)
 		if c.ShouldRunCallback {
-			if c.newStatus == "" {
+			payment.PaymentStatus = c.NewStatus
+			if payment.PaymentStatus == "" {
 				payment.PaymentStatus = "success"
 			}
 			c.paymentsStore.Set(payment.ID.String(), payment)
@@ -54,5 +73,6 @@ func (c *MockClient) CreatePayment(payment payment_gateway.Payment, callBack fun
 	}()
 	return http.Response{
 		StatusCode: c.StatusCode,
+		Body:       io.NopCloser(bytes.NewBuffer([]byte(fmt.Sprintf(`{"status": "%d"}`, c.StatusCode)))),
 	}
 }

@@ -4,10 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"github.com/afex/hystrix-go/hystrix"
-	"github.com/marioarizaj/payment_gateway/internal/acquiringbank"
-	"time"
-
 	"github.com/go-redis/redis_rate/v9"
+	"github.com/marioarizaj/payment_gateway/internal/acquiringbank"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/marioarizaj/payment_gateway/internal/config"
@@ -38,12 +36,7 @@ func InitDependencies(config config.Config) (Dependencies, error) {
 		Limiter: redis_rate.NewLimiter(rds),
 		Redis:   rds,
 		// By default, let's always return a good response
-		BankClient: &acquiringbank.MockClient{
-			StatusCode:                  202,
-			SleepIntervalInitialRequest: 20 * time.Millisecond,
-			SleepIntervalForCallback:    60 * time.Millisecond,
-			ShouldRunCallback:           true,
-		},
+		BankClient: acquiringbank.NewMockClient(config.MockBankConfig),
 	}, nil
 }
 

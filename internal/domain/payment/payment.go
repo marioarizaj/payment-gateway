@@ -62,7 +62,7 @@ func (d *Domain) callbackFromAcquiringBank(payment payment_gateway.Payment) {
 	if err != nil {
 		d.logger.Error("Unexpected redis error", zap.Error(err))
 	}
-	err = d.repo.UpdatePayment(context.Background(), payment.GetStoragePayment())
+	err = d.repo.UpdateStatus(context.Background(), payment.GetStoragePayment())
 	if err != nil {
 		d.logger.Error("Unexpected internal database error", zap.Error(err))
 	}
@@ -97,7 +97,7 @@ func (d *Domain) CreatePayment(ctx context.Context, payment payment_gateway.Paym
 	err = d.CreatePaymentOnAcquiringBank(payment)
 	if err != nil {
 		payment.PaymentStatus = "failed"
-		internalErr := d.repo.UpdatePayment(context.Background(), payment.GetStoragePayment())
+		internalErr := d.repo.UpdateStatus(context.Background(), payment.GetStoragePayment())
 		if internalErr != nil {
 			d.logger.Error("Internal database unexpected error", zap.Error(err))
 		}
@@ -120,10 +120,10 @@ func (d *Domain) CreatePayment(ctx context.Context, payment payment_gateway.Paym
 func (d *Domain) CreatePaymentOnAcquiringBank(payment payment_gateway.Payment) error {
 	// Use a circuit breaking library in cases when the acquiring bank is offline
 	res, err := d.CreatePaymentUsingCircuitBreaker(payment, d.callbackFromAcquiringBank)
-	defer func() { _ = res.Body.Close() }()
 	if err != nil {
 		return responses.GetErrorResponseFromStatusCode(res.StatusCode)
 	}
+	_ = res.Body.Close()
 	return nil
 }
 
@@ -233,6 +233,7 @@ func (d *Domain) callBankWithRetries(payment payment_gateway.Payment, callBackFn
 		// Retry only for 500 codes as it is not almost impossible to recover from a 4xx
 		if resp.StatusCode < 299 || (resp.StatusCode > 399 && resp.StatusCode < 500) {
 			output <- resp
+			return nil
 		} else {
 			err = fmt.Errorf("status was %v", resp.StatusCode)
 		}

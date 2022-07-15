@@ -48,8 +48,9 @@ func (p Payment) GetStoragePayment() *repositiory.Payment {
 	return &repositiory.Payment{
 		ID:              p.ID,
 		Amount:          p.Amount.AmountFractional,
-		CurrencyCode:    p.Amount.CurrencyCode,
 		MerchantID:      p.MerchantID,
+		PaymentStatus:   &p.PaymentStatus,
+		CurrencyCode:    p.Amount.CurrencyCode,
 		Description:     p.Description,
 		CardName:        p.CardInfo.CardName,
 		CardNumber:      p.CardInfo.CardNumber,

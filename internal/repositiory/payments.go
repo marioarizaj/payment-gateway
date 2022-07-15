@@ -34,10 +34,10 @@ func (r *repo) CreatePayment(ctx context.Context, payment *Payment) error {
 	return err
 }
 
-func (r *repo) UpdatePayment(ctx context.Context, payment *Payment) error {
+func (r *repo) UpdateStatus(ctx context.Context, payment *Payment) error {
 	now := time.Now()
 	payment.UpdatedAt = &now
-	_, err := r.db.NewUpdate().Model(payment).Exec(ctx)
+	_, err := r.db.NewUpdate().Model(payment).Where("id = ?", payment.ID).Column("payment_status", "updated_at").Exec(ctx)
 	return err
 }
 

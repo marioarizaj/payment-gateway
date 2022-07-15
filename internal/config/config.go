@@ -57,12 +57,21 @@ type CircuitBreakerConfig struct {
 	SleepWindow            int      `envconfig:"HYSTRIX_SLEEP_WINDOW"`
 }
 
+type MockBankConfig struct {
+	StatusCode                  int    `envconfig:"MOCK_STATUS_CODE" default:"202"`
+	UpdateToStatus              string `envconfig:"MOCK_PAYMENT_STATUS" default:"succeeded"`
+	SleepIntervalInitialRequest int    `envconfig:"SLEEP_INTERVAL_INITIAL_REQUEST" default:"10"`
+	SleepIntervalForCallback    int    `envconfig:"SLEEP_INTERVAL_FOR_CALLBACK" default:"200"`
+	ShouldRunCallback           bool   `envconfig:"SHOULD_RUN_CALLBACK" default:"true"`
+}
+
 type Config struct {
 	AppConfig            AppConfig
 	Server               Server
 	RateLimiter          RateLimiter
 	Auth                 Auth
 	Redis                Redis
+	MockBankConfig       MockBankConfig
 	CircuitBreakerConfig CircuitBreakerConfig
 	DatabaseConfig       DatabaseConfig
 }
@@ -72,7 +81,7 @@ func LoadConfig() (Config, error) {
 	envPath := ""
 	if appEnv == testEnv || appEnv == devEnv {
 		err := filepath.Walk(os.ExpandEnv("$GOPATH/src"), func(path string, info fs.FileInfo, err error) error {
-			if strings.Contains(path, projectName) && strings.Contains(path, ".env") {
+			if strings.Contains(path, projectName) && strings.Contains(path, ".env") && !strings.Contains(path, "docker") {
 				envPath = path
 			}
 			return nil
