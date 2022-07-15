@@ -166,6 +166,7 @@ This way, we ensure that any client issues that post the same payment twice with
 3. If I had more time, I would have deployed the project on Heroku/Digital ocean using the GitHub Actions already implemented.
 4. Instead of mocking the acquiring bank with a package, we could have a proper server running and serving requests. That way it would be easier to add more behaviours for testing. We could have also implemented the appropriate ISO8583 format.
 5. Use an orchestration tool like Kubernetes, to be able to scale out the app and provide a more real life scenario.
+6. Add a separate `docker-compose` so that we do not spin up dependencies that are not needed by testing.
 
 ## Cloud technologies I would use
 1. For deploying the app, I would use AWS ECS.
