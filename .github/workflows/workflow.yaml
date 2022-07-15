@@ -51,7 +51,7 @@ jobs:
         # Install all the dependencies
       - name: Run tests
         env:
-          DATABASE_URL: postgres://db_user:db_pass@localhost:5432/payment-gateway?sslmode=disable&dial_timeout=5s&read_timeout=5s&write_timeout=5s
+          DATABASE_URL: postgres://db_user:db_pass@localhost:5432/payment_gateway?sslmode=disable&dial_timeout=5s&read_timeout=5s&write_timeout=5s
           SERVER_PORT: 8080
           API_KEY_SECRET: super-secret-key
           ALLOWED_REQUESTS_PER_SECOND: 100
