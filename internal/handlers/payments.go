@@ -30,10 +30,10 @@ func (h *Handler) CreatePayment(w http.ResponseWriter, r *http.Request) {
 	}
 	payment.MerchantID = merchantID
 
-	_, err = h.domain.GetPayment(ctx, payment.ID)
+	p, err := h.domain.GetPayment(ctx, payment.ID)
 	if err == nil {
 		// This means that this payment was created some time in the past
-		responses.RespondWithJSON(w, http.StatusCreated, payment)
+		responses.RespondWithJSON(w, http.StatusOK, p)
 		return
 	}
 	var notFoundErr responses.NotFoundError

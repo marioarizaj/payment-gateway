@@ -32,6 +32,7 @@ func TestRepo_CreatePayment(t *testing.T) {
 			payment: &repositiory.Payment{
 				ID:              uuid.Must(uuid.Parse("b5f9c307-5202-4c52-aba9-752167eef9bf")),
 				Amount:          2000,
+				PaymentStatus:   "processing",
 				MerchantID:      uuid.Must(uuid.Parse("6c5a19d0-f132-4a55-93d3-2c00db06d41b")),
 				CurrencyCode:    "USD",
 				Description:     "Payment test",
@@ -45,6 +46,7 @@ func TestRepo_CreatePayment(t *testing.T) {
 			payment: &repositiory.Payment{
 				ID:              uuid.Must(uuid.Parse("e2cf99cf-02a6-47f7-ad74-fa6245852176")),
 				Amount:          2000,
+				PaymentStatus:   "processing",
 				MerchantID:      uuid.Must(uuid.Parse("f53718ed-cce8-4e4f-89e0-44626069e9cf")),
 				CurrencyCode:    "USD",
 				Description:     "Payment test",
@@ -98,6 +100,7 @@ func TestRepo_GetPaymentByID(t *testing.T) {
 				Amount:          2000,
 				MerchantID:      uuid.Must(uuid.Parse("6c5a19d0-f132-4a55-93d3-2c00db06d41b")),
 				CurrencyCode:    "USD",
+				PaymentStatus:   "processing",
 				Description:     "Payment test",
 				CardName:        "Mario Arizaj",
 				CardNumber:      "378282246310005",
@@ -112,6 +115,7 @@ func TestRepo_GetPaymentByID(t *testing.T) {
 				Amount:          2000,
 				MerchantID:      uuid.Must(uuid.Parse("6c5a19d0-f132-4a55-93d3-2c00db06d41b")),
 				CurrencyCode:    "USD",
+				PaymentStatus:   "processing",
 				Description:     "Payment test",
 				CardName:        "Mario Arizaj",
 				CardNumber:      "378282246310005",
@@ -160,7 +164,6 @@ func TestRepo_UpdateStatus(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	success := "succeeded"
 	cases := []struct {
 		name               string
 		idToSearch         uuid.UUID
@@ -179,6 +182,7 @@ func TestRepo_UpdateStatus(t *testing.T) {
 				Amount:          2000,
 				MerchantID:      uuid.Must(uuid.Parse("6c5a19d0-f132-4a55-93d3-2c00db06d41b")),
 				CurrencyCode:    "USD",
+				PaymentStatus:   "processing",
 				Description:     "Payment test",
 				CardName:        "Mario Arizaj",
 				CardNumber:      "378282246310005",
@@ -197,6 +201,7 @@ func TestRepo_UpdateStatus(t *testing.T) {
 				Amount:          2000,
 				MerchantID:      uuid.Must(uuid.Parse("6c5a19d0-f132-4a55-93d3-2c00db06d41b")),
 				CurrencyCode:    "USD",
+				PaymentStatus:   "processing",
 				Description:     "Payment test",
 				CardName:        "Mario Arizaj",
 				CardNumber:      "378282246310005",
@@ -212,7 +217,7 @@ func TestRepo_UpdateStatus(t *testing.T) {
 			payment: &repositiory.Payment{
 				ID:              uuid.Must(uuid.Parse("b5f9c307-5202-4c52-aba9-752167eef9bf")),
 				Amount:          2000,
-				PaymentStatus:   &success,
+				PaymentStatus:   "success",
 				MerchantID:      uuid.Must(uuid.Parse("6c5a19d0-f132-4a55-93d3-2c00db06d41b")),
 				CurrencyCode:    "USD",
 				Description:     "Payment test",
@@ -239,9 +244,8 @@ func TestRepo_UpdateStatus(t *testing.T) {
 				return
 			}
 			updatedPayment := *c.payment
-			updatedPayment.PaymentStatus = &c.newStatus
+			updatedPayment.PaymentStatus = c.newStatus
 			updatedPayment.FailedReason = c.newReason
-
 			err = repo.UpdateStatus(ctx, &updatedPayment)
 			if c.expectedError != nil {
 				assert.Equal(t, c.expectedError.Error(), err.Error())
@@ -252,10 +256,10 @@ func TestRepo_UpdateStatus(t *testing.T) {
 				return
 			}
 			if c.shouldUpdateStatus {
-				assert.Equal(t, c.newStatus, *payment.PaymentStatus)
+				assert.Equal(t, c.newStatus, payment.PaymentStatus)
 				assert.Equal(t, c.newReason, payment.FailedReason)
 			} else {
-				assert.Equal(t, *c.payment.PaymentStatus, *payment.PaymentStatus)
+				assert.Equal(t, c.payment.PaymentStatus, payment.PaymentStatus)
 				assert.Equal(t, c.payment.FailedReason, payment.FailedReason)
 			}
 		})

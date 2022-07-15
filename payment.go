@@ -50,7 +50,7 @@ func (p Payment) GetStoragePayment() *repositiory.Payment {
 		ID:              p.ID,
 		Amount:          p.Amount.AmountFractional,
 		MerchantID:      p.MerchantID,
-		PaymentStatus:   &p.PaymentStatus,
+		PaymentStatus:   p.PaymentStatus,
 		FailedReason:    p.FailedReason,
 		CurrencyCode:    p.Amount.CurrencyCode,
 		Description:     p.Description,
@@ -64,7 +64,7 @@ func (p Payment) GetStoragePayment() *repositiory.Payment {
 func GetPaymentFromStoredPayment(p *repositiory.Payment) Payment {
 	return Payment{
 		ID:            p.ID,
-		PaymentStatus: *p.PaymentStatus,
+		PaymentStatus: p.PaymentStatus,
 		FailedReason:  p.FailedReason,
 		Amount: Amount{
 			AmountFractional: p.Amount,

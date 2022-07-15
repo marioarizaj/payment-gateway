@@ -13,7 +13,7 @@ type Payment struct {
 	// Amount is the amount that we need to charge to the given card fo this transaction.
 	Amount        int64
 	MerchantID    uuid.UUID
-	PaymentStatus *string
+	PaymentStatus string
 
 	FailedReason string
 	CurrencyCode string

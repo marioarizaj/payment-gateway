@@ -57,10 +57,19 @@ func TestDomain_CreatePayment(t *testing.T) {
 		mockConfig           config.MockBankConfig
 		expectedStatus       string
 		expectedFailedReason string
+		shouldCreateRecord   bool
 	}{
 		{
-			name:       "create_payment_success",
-			mockConfig: cfg.MockBankConfig,
+			name:      "create_payment_success",
+			sleepTime: time.Second,
+			mockConfig: config.MockBankConfig{
+				StatusCode:                  202,
+				UpdateToStatus:              "succeeded",
+				SleepIntervalInitialRequest: 10,
+				SleepIntervalForCallback:    50,
+				ShouldRunCallback:           true,
+			},
+			shouldCreateRecord: true,
 			payment: func(domain payment.Domain) (payment_gateway.Payment, error) {
 				p := baseTestPayment
 				return p, nil
@@ -68,8 +77,9 @@ func TestDomain_CreatePayment(t *testing.T) {
 			expectedStatus: "succeeded",
 		},
 		{
-			name:      "create_payment_success_failing_acquiring_bank_async",
-			sleepTime: 2 * time.Second,
+			name:               "create_payment_success_failing_acquiring_bank_async",
+			sleepTime:          2 * time.Second,
+			shouldCreateRecord: true,
 			mockConfig: config.MockBankConfig{
 				StatusCode:                  202,
 				UpdateToStatus:              "failed",
@@ -86,8 +96,9 @@ func TestDomain_CreatePayment(t *testing.T) {
 			expectedFailedReason: "no sufficient funds",
 		},
 		{
-			name:      "create_payment_success_failing_acquiring_bank_sync",
-			sleepTime: 3 * time.Second,
+			name:               "create_payment_success_failing_acquiring_bank_sync",
+			sleepTime:          3 * time.Second,
+			shouldCreateRecord: false,
 			mockConfig: config.MockBankConfig{
 				StatusCode:                  400,
 				UpdateToStatus:              "failed",
@@ -100,11 +111,11 @@ func TestDomain_CreatePayment(t *testing.T) {
 				p := baseTestPayment
 				return p, nil
 			},
-			expectedStatus: "failed",
 		},
 		{
-			name:      "create_payment_timeout_circuit_breaker",
-			sleepTime: 3 * time.Second,
+			name:               "create_payment_timeout_circuit_breaker",
+			sleepTime:          3 * time.Second,
+			shouldCreateRecord: false,
 			mockConfig: config.MockBankConfig{
 				UpdateToStatus:              "failed",
 				SleepIntervalInitialRequest: 100000,
@@ -118,8 +129,9 @@ func TestDomain_CreatePayment(t *testing.T) {
 			expectedStatus: "failed",
 		},
 		{
-			name:      "create_payment_timeout_circuit_breaker_retry",
-			sleepTime: 3 * time.Second,
+			name:               "create_payment_timeout_circuit_breaker_retry",
+			sleepTime:          3 * time.Second,
+			shouldCreateRecord: false,
 			mockConfig: config.MockBankConfig{
 				StatusCode:                  500,
 				UpdateToStatus:              "failed",
@@ -134,8 +146,14 @@ func TestDomain_CreatePayment(t *testing.T) {
 			expectedStatus: "failed",
 		},
 		{
-			name:       "create_payment_invalid_card",
-			mockConfig: cfg.MockBankConfig,
+			name:               "create_payment_invalid_card",
+			shouldCreateRecord: false,
+			mockConfig: config.MockBankConfig{
+				StatusCode:                  500,
+				UpdateToStatus:              "failed",
+				SleepIntervalInitialRequest: 10,
+				ShouldRunCallback:           false,
+			},
 			payment: func(domain payment.Domain) (payment_gateway.Payment, error) {
 				p := baseTestPayment
 				p.CardInfo.ExpiryYear = 21
@@ -144,8 +162,16 @@ func TestDomain_CreatePayment(t *testing.T) {
 			expectedError: responses.BadRequestError{Err: errors.New("credit card has expired")},
 		},
 		{
-			name:       "create_payment_duplicate_transaction",
-			mockConfig: cfg.MockBankConfig,
+			name:               "create_payment_duplicate_transaction",
+			sleepTime:          2 * time.Second,
+			shouldCreateRecord: true,
+			mockConfig: config.MockBankConfig{
+				StatusCode:                  202,
+				UpdateToStatus:              "succeeded",
+				SleepIntervalInitialRequest: 10,
+				SleepIntervalForCallback:    50,
+				ShouldRunCallback:           true,
+			},
 			payment: func(domain payment.Domain) (payment_gateway.Payment, error) {
 				ctx := context.Background()
 				p := baseTestPayment
@@ -162,8 +188,9 @@ func TestDomain_CreatePayment(t *testing.T) {
 			expectedError: responses.ConflictError{},
 		},
 		{
-			name:       "create_payment_duplicate_transaction_caught_in_redis",
-			mockConfig: cfg.MockBankConfig,
+			name:               "create_payment_duplicate_transaction_caught_in_redis",
+			mockConfig:         cfg.MockBankConfig,
+			shouldCreateRecord: false,
 			payment: func(domain payment.Domain) (payment_gateway.Payment, error) {
 				ctx := context.Background()
 				p := baseTestPayment
@@ -195,6 +222,11 @@ func TestDomain_CreatePayment(t *testing.T) {
 			createdPayment, err := d.CreatePayment(context.Background(), p)
 			if c.expectedError != nil {
 				assert.Equal(t, c.expectedError, err)
+				if !c.shouldCreateRecord {
+					// Check that the record is not on database
+					_, err = d.GetPayment(context.Background(), p.ID)
+					assert.Equal(t, responses.NotFoundError{}, err)
+				}
 				return
 			}
 			// First verify that CVV is not returned
@@ -209,8 +241,7 @@ func TestDomain_CreatePayment(t *testing.T) {
 			time.Sleep(time.Second)
 			// Let's wait a second, for the callback to update the database
 			newPayment, err := d.GetPayment(context.Background(), p.ID)
-			if c.expectedError != nil {
-				assert.Equal(t, c.expectedError, err)
+			if !assert.NoError(t, err) {
 				return
 			}
 			assert.Equal(t, c.expectedStatus, newPayment.PaymentStatus)

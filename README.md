@@ -109,7 +109,7 @@ Please replace the secret-key and merchant_uuid with the appropriate values.
    3. Then we insert the payment with a `processing` status on our postgresql database.
    4. Now we reach out to the acquiring bank, to retrieve the money from the shoppers credit card.
    5. Here we reach out to our mock acquiring bank using [hystrix](https://github.com/afex/hystrix-go) as a circuit breaker. We also have a simple retry mechanism in cases of recoverable 500 errors.
-   6. If the status returned from the bank is not `202 Accepted`, we set the status of the payment to failed, and return an error to the merchant.
+   6. If the status returned from the bank is not `202 Accepted`, we rollback the transaction, and return an error to the merchant.
    7. If the status is success, we set our deduplication key on redis cache, to prevent multiple requests using the same card and amount.
    8. The merchant will process the request async, and use a callback we have provided to update the state. This represents a webhook on real world scenario.
    9. During this time, there are a lot of things that can go wrong, please take a look at the openapi spec for a comprehensive list of errors returned.

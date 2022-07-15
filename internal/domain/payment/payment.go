@@ -81,8 +81,15 @@ func (d *Domain) CreatePayment(ctx context.Context, payment payment_gateway.Paym
 		d.logger.Error("Bad Request", zap.Error(err))
 		return payment_gateway.Payment{}, err
 	}
+
+	payment.PaymentStatus = "processing"
+	txRepo, err := d.repo.Begin(ctx)
+	if err != nil {
+		d.logger.Error("Error initialising transaction")
+		return payment_gateway.Payment{}, responses.InternalServerError{Err: err}
+	}
 	// Create the payment on our internal system, with a status of processing
-	err = d.repo.CreatePayment(ctx, payment.GetStoragePayment())
+	err = txRepo.CreatePayment(ctx, payment.GetStoragePayment())
 	if err != nil {
 		var pgErr pgdriver.Error
 		if errors.As(err, &pgErr) {
@@ -96,14 +103,18 @@ func (d *Domain) CreatePayment(ctx context.Context, payment payment_gateway.Paym
 	}
 	err = d.CreatePaymentOnAcquiringBank(payment)
 	if err != nil {
-		payment.PaymentStatus = "failed"
-		payment.FailedReason = err.Error()
-		internalErr := d.repo.UpdateStatus(context.Background(), payment.GetStoragePayment())
+		internalErr := txRepo.Rollback(ctx)
 		if internalErr != nil {
 			d.logger.Error("Internal database unexpected error", zap.Error(err))
 		}
 		return payment_gateway.Payment{}, err
 	}
+	err = txRepo.Commit(ctx)
+	if err != nil {
+		d.logger.Error("Could not commit transaction", zap.Error(err))
+		return payment_gateway.Payment{}, err
+	}
+
 	err = d.cache.SetValue(ctx, cacheDedupKey, true, 5*time.Minute)
 	if err != nil {
 		d.logger.Error("Redis unexpected error", zap.Error(err))
