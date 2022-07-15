@@ -153,21 +153,21 @@ You can mock the following behaviours want with the above config.
 Given the time, I have not made any clear separation between unit and integration tests.
 There is only one type of test, which needs all the dependencies running for them to be successful.
 After following the steps for [Running the project](#running-the-project), you need to run `go test --race -cover ./...`. The tests will run and output the coverage.
-Please note that I have not aimed for a very high coverage. On next steps, I will outline all the other areas that might benefit from more coverage.
+Please note that I have not aimed for maximum coverage (Goland shows 85.3% of statements).
 
 ## Idempotency
 The PaymentID given from the Merchant will be globally unique, and two different requests with the same paymentID will not create a payment twice.
 Another added security feature, is to not allow the same card to make a payment with the same amount within 5 minutes of one another.
 This way, we ensure that any client issues that post the same payment twice with different IDs will not result in overcharging a customer. 
 
-### Areas for improvement
+## Areas for improvement
 1. Any project could benefit from more test coverage, and there is no exception here. Although there are a lot of test cases covered, there could also be more.
 2. A clear separation between unit and integration tests would make it easier and faster to add new features by running unit tests with no dependencies.
 3. If I had more time, I would have deployed the project on Heroku/Digital ocean using the GitHub Actions already implemented.
 4. Instead of mocking the acquiring bank with a package, we could have a proper server running and serving requests. That way it would be easier to add more behaviours for testing. We could have also implemented the appropriate ISO8583 format.
 5. Use an orchestration tool like Kubernetes, to be able to scale out the app and provide a more real life scenario.
 
-### Cloud technologies I would use
+## Cloud technologies I would use
 1. For deploying the app, I would use AWS ECS.
    1. Using containers gives us the ability to run multiple instances on a single node resulting in a reduced cost.
    2. In cases the container crashes, it is much faster to spin up a new container.
