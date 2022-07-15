@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"github.com/afex/hystrix-go/hystrix"
 	"net/http"
 
 	"github.com/marioarizaj/payment_gateway/internal/config"
@@ -30,10 +29,6 @@ func NewRouter(cfg config.Config, deps dependencies.Dependencies, l *zap.Logger)
 
 	r := mux.NewRouter()
 	r.Handle("/metrics", promhttp.Handler())
-
-	hystrixStreamHandler := hystrix.NewStreamHandler()
-	hystrixStreamHandler.Start()
-	r.Handle("/hystrix", hystrixStreamHandler)
 
 	v1R := r.PathPrefix("/v1").Subrouter()
 
