@@ -27,7 +27,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"id\": \"7f045caf-f8a3-42cb-a404-496564d3d5bc\",\n    \"amount\": {\n        \"amount_fractional\": 1000,\n        \"currency_code\": \"USD\"\n    },\n    \"description\": \"payment for goods\",\n    \"card_info\": {\n        \"card_name\": \"Mario Arizaj\",\n        \"card_number\": \"4263982640269299\",\n        \"expiry_month\": 10,\n        \"expiry_year\": 2022,\n        \"cvv\": \"123\"\n    }\n}",
+					"raw": "{\n    \"id\": \"e44abe5f-1eec-4968-91c3-1a301edf50b6\",\n    \"amount\": {\n        \"amount_fractional\": 1002,\n        \"currency_code\": \"USD\"\n    },\n    \"description\": \"payment for goods\",\n    \"card_info\": {\n        \"card_name\": \"Mario Arizaj\",\n        \"card_number\": \"5555555555554444\",\n        \"expiry_month\": 10,\n        \"expiry_year\": 2022,\n        \"cvv\": \"123\"\n    }\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -35,12 +35,13 @@
 					}
 				},
 				"url": {
-					"raw": "localhost:8080/payments",
+					"raw": "localhost:8080/v1/payments",
 					"host": [
 						"localhost"
 					],
 					"port": "8080",
 					"path": [
+						"v1",
 						"payments"
 					]
 				}
@@ -50,8 +51,36 @@
 		{
 			"name": "Get Payment",
 			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "6c5a19d0-f132-4a55-93d3-2c00db06d41b",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "a7898e515691064b49a15a01e69503f83cd918594e643cc3e949adef273b309f",
+							"type": "string"
+						}
+					]
+				},
 				"method": "GET",
-				"header": []
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/v1/payments/e44abe5f-1eec-4968-91c3-1a301edf50b6",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v1",
+						"payments",
+						"e44abe5f-1eec-4968-91c3-1a301edf50b6"
+					]
+				}
 			},
 			"response": []
 		},
@@ -59,7 +88,18 @@
 			"name": "Metrics",
 			"request": {
 				"method": "GET",
-				"header": []
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/metrics",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"metrics"
+					]
+				}
 			},
 			"response": []
 		}
