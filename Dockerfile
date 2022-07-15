@@ -22,7 +22,7 @@ WORKDIR app
 COPY . .
 
 # Build the binary and make it executable.
-RUN GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /go/bin/payment_gateway ./cmd/payment_gateway/main.go
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /go/bin/payment_gateway ./cmd/payment_gateway/main.go
 
 RUN chmod +x /go/bin/payment_gateway
 
