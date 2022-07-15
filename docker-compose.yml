@@ -8,7 +8,6 @@ services:
     env_file:
       - .env.docker
     restart: on-failure
-    user: root
     ports:
       - '8080:8080'
     depends_on:
@@ -30,7 +29,6 @@ services:
     build:
       dockerfile: ./db/Dockerfile
       context: .
-    user: root
     environment:
       DB_NAME: payment_gateway
       DB_HOST: db

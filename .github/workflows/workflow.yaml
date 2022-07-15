@@ -48,9 +48,9 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: '1.18.0' # The Go version to download (if necessary) and use.
-        # Install all the dependencies
       - name: Run tests
         env:
+          # Needed env variables
           DATABASE_URL: postgres://db_user:db_pass@localhost:5432/payment_gateway?sslmode=disable&dial_timeout=5s&read_timeout=5s&write_timeout=5s
           SERVER_PORT: 8080
           API_KEY_SECRET: super-secret-key
@@ -65,4 +65,5 @@ jobs:
           SERVER_IDLE_TIMEOUT: 30
           SERVER_READ_TIMEOUT: 2
           SERVER_WRITE_TIMEOUT: 2
+        # Run tests with coverage
         run: go test --race -cover ./...

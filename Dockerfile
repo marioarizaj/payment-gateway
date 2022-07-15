@@ -2,7 +2,7 @@ FROM golang:1.18.3-alpine3.16 AS builder
 
 # Install git.
 # Git is required for fetching the dependencies.
-RUN apk update && apk add --no-cache git
+RUN apk update
 
 # Create appuser.
 ENV USER=appuser
@@ -35,5 +35,5 @@ COPY --from=builder /go/bin/payment_gateway /go/bin/payment_gateway
 # Use an unprivileged user.
 USER appuser:appuser
 
-# Run the hello binary.
+# Run the payment_gateway binary.
 ENTRYPOINT ["/go/bin/payment_gateway"]
