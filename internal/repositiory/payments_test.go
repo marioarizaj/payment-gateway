@@ -151,6 +151,117 @@ func TestRepo_GetPaymentByID(t *testing.T) {
 	}
 }
 
+func TestRepo_UpdateStatus(t *testing.T) {
+	cfg, err := config.LoadConfig()
+	if !assert.NoError(t, err) {
+		return
+	}
+	deps, err := dependencies.InitDependencies(cfg)
+	if !assert.NoError(t, err) {
+		return
+	}
+	success := "succeeded"
+	cases := []struct {
+		name               string
+		idToSearch         uuid.UUID
+		newStatus          string
+		newReason          string
+		payment            *repositiory.Payment
+		expectedError      error
+		shouldUpdateStatus bool
+	}{
+		{
+			name:               "update_payment_success",
+			newStatus:          "succeeded",
+			shouldUpdateStatus: true,
+			payment: &repositiory.Payment{
+				ID:              uuid.Must(uuid.Parse("b5f9c307-5202-4c52-aba9-752167eef9bf")),
+				Amount:          2000,
+				MerchantID:      uuid.Must(uuid.Parse("6c5a19d0-f132-4a55-93d3-2c00db06d41b")),
+				CurrencyCode:    "USD",
+				Description:     "Payment test",
+				CardName:        "Mario Arizaj",
+				CardNumber:      "378282246310005",
+				CardExpiryMonth: 10,
+				CardExpiryYear:  22,
+			},
+			idToSearch: uuid.Must(uuid.Parse("b5f9c307-5202-4c52-aba9-752167eef9bf")),
+		},
+		{
+			name:               "updates_payment_to_failed_with_status",
+			newStatus:          "failed",
+			newReason:          "failed...",
+			shouldUpdateStatus: true,
+			payment: &repositiory.Payment{
+				ID:              uuid.Must(uuid.Parse("b5f9c307-5202-4c52-aba9-752167eef9bf")),
+				Amount:          2000,
+				MerchantID:      uuid.Must(uuid.Parse("6c5a19d0-f132-4a55-93d3-2c00db06d41b")),
+				CurrencyCode:    "USD",
+				Description:     "Payment test",
+				CardName:        "Mario Arizaj",
+				CardNumber:      "378282246310005",
+				CardExpiryMonth: 10,
+				CardExpiryYear:  22,
+			},
+			idToSearch: uuid.Must(uuid.Parse("b5f9c307-5202-4c52-aba9-752167eef9bf")),
+		},
+		{
+			name:               "does_not_update_payment_with_success_status",
+			newStatus:          "failed",
+			shouldUpdateStatus: false,
+			payment: &repositiory.Payment{
+				ID:              uuid.Must(uuid.Parse("b5f9c307-5202-4c52-aba9-752167eef9bf")),
+				Amount:          2000,
+				PaymentStatus:   &success,
+				MerchantID:      uuid.Must(uuid.Parse("6c5a19d0-f132-4a55-93d3-2c00db06d41b")),
+				CurrencyCode:    "USD",
+				Description:     "Payment test",
+				CardName:        "Mario Arizaj",
+				CardNumber:      "378282246310005",
+				CardExpiryMonth: 10,
+				CardExpiryYear:  22,
+			},
+			idToSearch: uuid.Must(uuid.Parse("b5f9c307-5202-4c52-aba9-752167eef9bf")),
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			ctx := context.Background()
+			tx, err := deps.DB.BeginTx(ctx, &sql.TxOptions{})
+			if !assert.NoError(t, err) {
+				return
+			}
+			defer func() { _ = tx.Rollback() }()
+			repo := repositiory.NewRepository(tx)
+			err = InsertTestPayment(repo, c.payment)
+			if !assert.NoError(t, err) {
+				return
+			}
+			updatedPayment := *c.payment
+			updatedPayment.PaymentStatus = &c.newStatus
+			updatedPayment.FailedReason = c.newReason
+
+			err = repo.UpdateStatus(ctx, &updatedPayment)
+			if c.expectedError != nil {
+				assert.Equal(t, c.expectedError.Error(), err.Error())
+				return
+			}
+			payment, err := repo.GetPaymentByID(ctx, c.payment.ID)
+			if !assert.NoError(t, err) {
+				return
+			}
+			if c.shouldUpdateStatus {
+				assert.Equal(t, c.newStatus, *payment.PaymentStatus)
+				assert.Equal(t, c.newReason, payment.FailedReason)
+			} else {
+				assert.Equal(t, *c.payment.PaymentStatus, *payment.PaymentStatus)
+				assert.Equal(t, c.payment.FailedReason, payment.FailedReason)
+			}
+		})
+	}
+}
+
 func InsertTestPayment(repo repositiory.Repository, payment *repositiory.Payment) error {
 	return repo.CreatePayment(context.Background(), payment)
 }
