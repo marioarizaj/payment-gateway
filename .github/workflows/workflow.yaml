@@ -56,4 +56,13 @@ jobs:
           API_KEY_SECRET: super-secret-key
           ALLOWED_REQUESTS_PER_SECOND: 100
           REDIS_ADDRESS: localhost:6379
-        run:  go test --race -cover ./...
+          HYSTRIX_COMMANDS: create_payment_in_acquiring_bank
+          HYSTRIX_TIMEOUT: 1000
+          HYSTRIX_MAX_CONCURRENT_REQUESTS: 200
+          HYSTRIX_ERROR_PERCENT_THRESHOLD: 50
+          HYSTRIX_REQUEST_VOLUME_THRESHOLD: 20
+          HYSTRIX_SLEEP_WINDOW: 5000
+          SERVER_IDLE_TIMEOUT: 30
+          SERVER_READ_TIMEOUT: 2
+          SERVER_WRITE_TIMEOUT: 2
+        run: go test --race -cover ./...

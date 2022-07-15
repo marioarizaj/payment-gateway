@@ -26,6 +26,10 @@ func (c *Client) SetValue(ctx context.Context, k string, v interface{}, expirati
 	return c.redis.Set(ctx, k, valBts, expiration).Err()
 }
 
+func (c *Client) DeleteKey(ctx context.Context, k string) error {
+	return c.redis.Del(ctx, k).Err()
+}
+
 func (c *Client) GetValue(ctx context.Context, k string, dest interface{}) error {
 	bts, err := c.redis.Get(ctx, k).Bytes()
 	if err != nil {

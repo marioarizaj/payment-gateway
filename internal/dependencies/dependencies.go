@@ -3,6 +3,9 @@ package dependencies
 import (
 	"context"
 	"database/sql"
+	"github.com/afex/hystrix-go/hystrix"
+	"github.com/marioarizaj/payment_gateway/internal/acquiringbank"
+	"time"
 
 	"github.com/go-redis/redis_rate/v9"
 
@@ -14,12 +17,14 @@ import (
 )
 
 type Dependencies struct {
-	DB      bun.IDB
-	Limiter *redis_rate.Limiter
-	Redis   *redis.Client
+	DB         bun.IDB
+	Limiter    *redis_rate.Limiter
+	BankClient *acquiringbank.MockClient
+	Redis      *redis.Client
 }
 
 func InitDependencies(config config.Config) (Dependencies, error) {
+	ConfigureHystrix(config.CircuitBreakerConfig)
 	db, err := InitDB(config.DatabaseConfig.DatabaseURL)
 	if err != nil {
 		return Dependencies{}, err
@@ -32,6 +37,13 @@ func InitDependencies(config config.Config) (Dependencies, error) {
 		DB:      db,
 		Limiter: redis_rate.NewLimiter(rds),
 		Redis:   rds,
+		// By default, let's always return a good response
+		BankClient: &acquiringbank.MockClient{
+			StatusCode:                  202,
+			SleepIntervalInitialRequest: 20 * time.Millisecond,
+			SleepIntervalForCallback:    60 * time.Millisecond,
+			ShouldRunCallback:           true,
+		},
 	}, nil
 }
 
@@ -50,4 +62,17 @@ func InitRedis(cfg config.Redis) (*redis.Client, error) {
 	})
 	err := rdb.Ping(context.Background()).Err()
 	return rdb, err
+}
+
+// ConfigureHystrix sets up hystrix circuit breakers.
+func ConfigureHystrix(cfg config.CircuitBreakerConfig) {
+	for _, c := range cfg.Commands {
+		hystrix.ConfigureCommand(c, hystrix.CommandConfig{
+			Timeout:                cfg.Timeout,
+			MaxConcurrentRequests:  cfg.MaxConcurrentRequests,
+			ErrorPercentThreshold:  cfg.ErrorPercentThreshold,
+			RequestVolumeThreshold: cfg.RequestVolumeThreshold,
+			SleepWindow:            cfg.SleepWindow,
+		})
+	}
 }

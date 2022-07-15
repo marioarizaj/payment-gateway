@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"github.com/afex/hystrix-go/hystrix"
 	"net/http"
 
 	"github.com/marioarizaj/payment_gateway/internal/config"
@@ -24,16 +25,23 @@ type Handler struct {
 
 func NewRouter(cfg config.Config, deps dependencies.Dependencies, l *zap.Logger) *mux.Router {
 	h := &Handler{
-		domain: payment.NewDomain(repositiory.NewRepository(deps.DB), rediscache.NewRedisClient(deps.Redis), l),
+		domain: payment.NewDomain(repositiory.NewRepository(deps.DB), rediscache.NewRedisClient(deps.Redis), l, deps.BankClient),
 	}
 
 	r := mux.NewRouter()
 	r.Handle("/metrics", promhttp.Handler())
+
+	hystrixStreamHandler := hystrix.NewStreamHandler()
+	hystrixStreamHandler.Start()
+	r.Handle("/hystrix", hystrixStreamHandler)
+
 	v1R := r.PathPrefix("/v1").Subrouter()
+
 	v1R.Use(auth.Middleware(cfg.Auth.ApiKeySecret))
 	v1R.Use(limiter.Middleware(deps.Limiter, cfg.RateLimiter.AllowedReqsPerSecond))
 	v1R.Use(prometheus.Middleware)
 	v1R.Use(logging.Middleware(l))
+
 	v1R.HandleFunc("/payments", h.CreatePayment).Methods(http.MethodPost)
 	v1R.HandleFunc("/payments/{id}", h.GetPayment).Methods(http.MethodGet)
 

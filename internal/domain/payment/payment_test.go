@@ -206,7 +206,7 @@ func getDomain(deps dependencies.Dependencies) (*payment.Domain, func(), error) 
 	}
 	repo := repositiory.NewRepository(tx)
 	redisCache := rediscache.NewRedisClient(deps.Redis)
-	d := payment.NewDomain(repo, redisCache, zap.NewNop())
+	d := payment.NewDomain(repo, redisCache, zap.NewNop(), deps.BankClient)
 	return d, func() {
 		_ = tx.Rollback()
 		deps.Redis.FlushAll(ctx)

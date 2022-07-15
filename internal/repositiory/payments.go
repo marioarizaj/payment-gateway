@@ -34,6 +34,13 @@ func (r *repo) CreatePayment(ctx context.Context, payment *Payment) error {
 	return err
 }
 
+func (r *repo) UpdatePayment(ctx context.Context, payment *Payment) error {
+	now := time.Now()
+	payment.UpdatedAt = &now
+	_, err := r.db.NewUpdate().Model(payment).Exec(ctx)
+	return err
+}
+
 func (r *repo) GetPaymentByID(ctx context.Context, id uuid.UUID) (*Payment, error) {
 	var payment Payment
 	_, err := r.db.NewSelect().Model(&payment).Where("id = ?", id).Exec(ctx, &payment)

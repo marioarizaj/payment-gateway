@@ -48,13 +48,23 @@ type RateLimiter struct {
 	AllowedReqsPerSecond int `envconfig:"ALLOWED_REQUESTS_PER_SECOND"`
 }
 
+type CircuitBreakerConfig struct {
+	Commands               []string `envconfig:"HYSTRIX_COMMANDS"`
+	Timeout                int      `envconfig:"HYSTRIX_TIMEOUT"`
+	MaxConcurrentRequests  int      `envconfig:"HYSTRIX_MAX_CONCURRENT_REQUESTS"`
+	ErrorPercentThreshold  int      `envconfig:"HYSTRIX_ERROR_PERCENT_THRESHOLD"`
+	RequestVolumeThreshold int      `envconfig:"HYSTRIX_REQUEST_VOLUME_THRESHOLD"`
+	SleepWindow            int      `envconfig:"HYSTRIX_SLEEP_WINDOW"`
+}
+
 type Config struct {
-	AppConfig      AppConfig
-	Server         Server
-	RateLimiter    RateLimiter
-	Auth           Auth
-	Redis          Redis
-	DatabaseConfig DatabaseConfig
+	AppConfig            AppConfig
+	Server               Server
+	RateLimiter          RateLimiter
+	Auth                 Auth
+	Redis                Redis
+	CircuitBreakerConfig CircuitBreakerConfig
+	DatabaseConfig       DatabaseConfig
 }
 
 func LoadConfig() (Config, error) {

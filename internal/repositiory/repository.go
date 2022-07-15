@@ -10,6 +10,7 @@ import (
 type Repository interface {
 	CreatePayment(ctx context.Context, payment *Payment) error
 	GetPaymentByID(ctx context.Context, id uuid.UUID) (*Payment, error)
+	UpdatePayment(ctx context.Context, payment *Payment) error
 }
 
 type repo struct {

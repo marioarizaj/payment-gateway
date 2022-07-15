@@ -5,16 +5,18 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"net/http"
 	"time"
 
 	"go.uber.org/zap"
 
+	"github.com/afex/hystrix-go/hystrix"
+	"github.com/eapache/go-resiliency/retrier"
 	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
 	"github.com/marioarizaj/payment_gateway"
 	"github.com/marioarizaj/payment_gateway/internal/creditcard"
 	"github.com/marioarizaj/payment_gateway/internal/repositiory"
-	"github.com/marioarizaj/payment_gateway/kit/rediscache"
 	"github.com/marioarizaj/payment_gateway/kit/responses"
 	"github.com/uptrace/bun/driver/pgdriver"
 )
@@ -22,19 +24,47 @@ import (
 const (
 	deduplicationCacheKey = "deduplication"
 	paymentCacheKey       = "payment"
+
+	createPaymentAcquiringBank = "create_payment_in_acquiring_bank"
+
+	retries = 3
 )
 
-type Domain struct {
-	repo   repositiory.Repository
-	cache  *rediscache.Client
-	logger *zap.Logger
+type BankClient interface {
+	CreatePayment(payment payment_gateway.Payment, callBack func(payment payment_gateway.Payment)) http.Response
 }
 
-func NewDomain(repo repositiory.Repository, cache *rediscache.Client, l *zap.Logger) *Domain {
+type Cache interface {
+	SetValue(ctx context.Context, k string, v interface{}, expiration time.Duration) error
+	GetValue(ctx context.Context, k string, dest interface{}) error
+	DeleteKey(ctx context.Context, k string) error
+}
+
+type Domain struct {
+	repo       repositiory.Repository
+	cache      Cache
+	logger     *zap.Logger
+	bankClient BankClient
+}
+
+func NewDomain(repo repositiory.Repository, cache Cache, l *zap.Logger, bankClient BankClient) *Domain {
 	return &Domain{
-		repo:   repo,
-		cache:  cache,
-		logger: l,
+		repo:       repo,
+		cache:      cache,
+		logger:     l,
+		bankClient: bankClient,
+	}
+}
+
+func (d *Domain) callbackFromAcquiringBank(payment payment_gateway.Payment) {
+	// First let's invalidate the cache
+	err := d.cache.DeleteKey(context.Background(), fmt.Sprintf("%s_%s", paymentCacheKey, payment.ID))
+	if err != nil {
+		d.logger.Error("Unexpected redis error", zap.Error(err))
+	}
+	err = d.repo.UpdatePayment(context.Background(), payment.GetStoragePayment())
+	if err != nil {
+		d.logger.Error("Unexpected internal database error", zap.Error(err))
 	}
 }
 
@@ -51,7 +81,7 @@ func (d *Domain) CreatePayment(ctx context.Context, payment payment_gateway.Paym
 		d.logger.Error("Bad Request", zap.Error(err))
 		return payment_gateway.Payment{}, err
 	}
-	// Here we need to persist this
+	// Create the payment on our internal system, with a status of processing
 	err = d.repo.CreatePayment(ctx, payment.GetStoragePayment())
 	if err != nil {
 		var pgErr pgdriver.Error
@@ -64,7 +94,15 @@ func (d *Domain) CreatePayment(ctx context.Context, payment payment_gateway.Paym
 		d.logger.Error("Database unexpected error", zap.Error(err))
 		return payment_gateway.Payment{}, responses.InternalServerError{Err: err}
 	}
-
+	err = d.CreatePaymentOnAcquiringBank(payment)
+	if err != nil {
+		payment.PaymentStatus = "failed"
+		internalErr := d.repo.UpdatePayment(context.Background(), payment.GetStoragePayment())
+		if internalErr != nil {
+			d.logger.Error("Internal database unexpected error", zap.Error(err))
+		}
+		return payment_gateway.Payment{}, err
+	}
 	err = d.cache.SetValue(ctx, cacheDedupKey, true, 5*time.Minute)
 	if err != nil {
 		d.logger.Error("Redis unexpected error", zap.Error(err))
@@ -77,6 +115,16 @@ func (d *Domain) CreatePayment(ctx context.Context, payment payment_gateway.Paym
 	}
 	p := payment_gateway.GetPaymentFromStoredPayment(storedPayment)
 	return p, nil
+}
+
+func (d *Domain) CreatePaymentOnAcquiringBank(payment payment_gateway.Payment) error {
+	// Use a circuit breaking library in cases when the acquiring bank is offline
+	res, err := d.CreatePaymentUsingCircuitBreaker(payment, d.callbackFromAcquiringBank)
+	defer func() { _ = res.Body.Close() }()
+	if err != nil {
+		return responses.GetErrorResponseFromStatusCode(res.StatusCode)
+	}
+	return nil
 }
 
 func (d *Domain) GetPayment(ctx context.Context, id uuid.UUID) (payment_gateway.Payment, error) {
@@ -134,4 +182,63 @@ func validateCard(cardInfo payment_gateway.CardInfo) error {
 		Year:   cardInfo.ExpiryYear,
 	}
 	return card.Validate()
+}
+
+func (d *Domain) CreatePaymentUsingCircuitBreaker(payment payment_gateway.Payment, callBackFn func(payment_gateway.Payment)) (http.Response, error) {
+	output := make(chan http.Response, 1)          // Declare the channel where the hystrix goroutine will put success responses.
+	errs := hystrix.Go(createPaymentAcquiringBank, // Pass the name of the circuit breaker as first parameter.
+
+		// 2nd parameter, the inlined func to run inside the breaker.
+		func() error {
+			// For hystrix, forward the err from the retrier. It's nil if successful.
+			return d.callBankWithRetries(payment, callBackFn, output)
+		},
+
+		// 3rd parameter, the fallback func. In this case, we just do a bit of logging and return the error.
+		func(err error) error {
+			d.logger.Error("In fallback function for breaker", zap.String("breaker_name", createPaymentAcquiringBank), zap.Error(err))
+			circuit, _, _ := hystrix.GetCircuit(createPaymentAcquiringBank)
+			d.logger.Info("Circuit state is", zap.Bool("is_open", circuit.IsOpen()))
+			return err
+		})
+
+	// Response and error handling. If the call was successful, the output channel gets the response. Otherwise,
+	// the errors channel gives us the error.
+	select {
+	case out := <-output:
+		d.logger.Info("Call in breaker successful", zap.String("breaker name", createPaymentAcquiringBank))
+		if out.StatusCode < 299 {
+			return out, nil
+		}
+		return out, fmt.Errorf("payment failed to get created on acquring bank, status: %d", out.StatusCode)
+	case err := <-errs:
+		return http.Response{}, err
+	}
+}
+
+func (d *Domain) callBankWithRetries(payment payment_gateway.Payment, callBackFn func(payment_gateway.Payment), output chan http.Response) error {
+	// Create a retrier with constant backoff, RETRIES number of attempts (3) with a 100ms sleep between retries.
+	r := retrier.New(retrier.ConstantBackoff(retries, 100*time.Millisecond), nil)
+
+	// This counter is just for getting some logging for showcasing, remove in production code.
+	attempt := 0
+
+	// Retrier works similar to hystrix, we pass the actual work (doing the HTTP request) in a func.
+	err := r.Run(func() error {
+		attempt++
+		var err error
+		// Do the mock request and handle response. If successful, pass resp over output channel,
+		// otherwise, do a bit of error logging and return to err.
+		resp := d.bankClient.CreatePayment(payment, callBackFn)
+		// Retry only for 500 codes as it is not almost impossible to recover from a 4xx
+		if resp.StatusCode < 299 || (resp.StatusCode > 399 && resp.StatusCode < 500) {
+			output <- resp
+		} else {
+			err = fmt.Errorf("status was %v", resp.StatusCode)
+		}
+
+		d.logger.Error(fmt.Sprintf("retrier failed, attempt %v", attempt))
+		return err
+	})
+	return err
 }

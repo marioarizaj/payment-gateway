@@ -1,3 +1,8 @@
+# github.com/afex/hystrix-go v0.0.0-20180502004556-fa1af6a1f4f5
+## explicit
+github.com/afex/hystrix-go/hystrix
+github.com/afex/hystrix-go/hystrix/metric_collector
+github.com/afex/hystrix-go/hystrix/rolling
 # github.com/beorn7/perks v1.0.1
 ## explicit; go 1.11
 github.com/beorn7/perks/quantile
@@ -10,6 +15,9 @@ github.com/davecgh/go-spew/spew
 # github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f
 ## explicit
 github.com/dgryski/go-rendezvous
+# github.com/eapache/go-resiliency v1.3.0
+## explicit; go 1.13
+github.com/eapache/go-resiliency/retrier
 # github.com/go-redis/redis/v8 v8.11.5
 ## explicit; go 1.17
 github.com/go-redis/redis/v8
@@ -72,6 +80,8 @@ github.com/prometheus/common/model
 github.com/prometheus/procfs
 github.com/prometheus/procfs/internal/fs
 github.com/prometheus/procfs/internal/util
+# github.com/smartystreets/goconvey v1.7.2
+## explicit; go 1.16
 # github.com/stretchr/testify v1.8.0
 ## explicit; go 1.13
 github.com/stretchr/testify/assert

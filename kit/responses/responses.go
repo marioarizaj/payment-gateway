@@ -2,6 +2,7 @@ package responses
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 )
 
@@ -20,6 +21,17 @@ func (e BadRequestError) Error() string {
 
 func (e BadRequestError) Response(w http.ResponseWriter) {
 	RespondWithError(w, http.StatusBadRequest, e.Error())
+}
+
+type TooManyRequests struct {
+}
+
+func (e TooManyRequests) Error() string {
+	return "too many requests"
+}
+
+func (e TooManyRequests) Response(w http.ResponseWriter) {
+	RespondWithError(w, http.StatusTooManyRequests, e.Error())
 }
 
 type InternalServerError struct {
@@ -72,4 +84,19 @@ func RespondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	_, _ = w.Write(response)
+}
+
+func GetErrorResponseFromStatusCode(code int) error {
+	switch code {
+	case 500:
+		return InternalServerError{Err: errors.New("internal server error")}
+	case 400:
+		return BadRequestError{Err: errors.New("bad request")}
+	case 429:
+		return TooManyRequests{}
+	case 409:
+		return ConflictError{}
+	default:
+		return InternalServerError{}
+	}
 }

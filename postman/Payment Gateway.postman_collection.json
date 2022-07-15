@@ -1,0 +1,67 @@
+{
+	"info": {
+		"_postman_id": "d83372d9-e169-4509-9cba-813a14832477",
+		"name": "Payment Gateway",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Create Payment",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "6c5a19d0-f132-4a55-93d3-2c00db06d41b",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "a7898e515691064b49a15a01e69503f83cd918594e643cc3e949adef273b309f",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"id\": \"7f045caf-f8a3-42cb-a404-496564d3d5bc\",\n    \"amount\": {\n        \"amount_fractional\": 1000,\n        \"currency_code\": \"USD\"\n    },\n    \"description\": \"payment for goods\",\n    \"card_info\": {\n        \"card_name\": \"Mario Arizaj\",\n        \"card_number\": \"4263982640269299\",\n        \"expiry_month\": 10,\n        \"expiry_year\": 2022,\n        \"cvv\": \"123\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:8080/payments",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"payments"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Payment",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "Metrics",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		}
+	]
+}
