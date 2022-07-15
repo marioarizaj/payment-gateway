@@ -126,6 +126,29 @@ The payment retrieving is a more straightforward process.
 4. The domain, first will look into the cache to find the payment. 
 5. If the payment is on redis cache, we will return the payment, otherwise, we retrieve it from the database, set it into the cache and return it.
 
+## Mock Bank Simulator
+The mock bank simulator is a very simple client. 
+It accepts these configs and has the following default values: 
+```go
+type MockBankConfig struct {
+	StatusCode                  int    `envconfig:"MOCK_STATUS_CODE" default:"202"`
+	UpdateToStatus              string `envconfig:"MOCK_PAYMENT_STATUS" default:"succeeded"`
+	SleepIntervalInitialRequest int    `envconfig:"SLEEP_INTERVAL_INITIAL_REQUEST" default:"10"`
+	SleepIntervalForCallback    int    `envconfig:"SLEEP_INTERVAL_FOR_CALLBACK" default:"200"`
+	ShouldRunCallback           bool   `envconfig:"SHOULD_RUN_CALLBACK" default:"true"`
+	FailedReason                string `envconfig:"MOCK_FAILED_REASON"`
+}
+```
+You can mock the following behaviours want with the above config. 
+* Simulate a timeout to test circuit breaking functionality
+* Return a synchronous error when the request is sent. 
+* Return a `202 Accepted` when the request is initially sent, and use the callback to update the payment to failed/succeeded.
+* The callback works as a webhook on real life scenarios, after a payment is processed async, the webhook is called. 
+* The simulator can be expanded as needed for more complex scenarios. 
+* One alternative I considered was using a [mock-server](https://github.com/friendsofgo/killgrave) but realised that it might conflict with requirements.
+* Configs can be tweaked to test with postman on .env and .env.docker file.
+* On the test cases, I have tested a variety of failures from the acquiring bank, which you can find on the domain tests.
+
 ## Running the tests
 Given the time, I have not made any clear separation between unit and integration tests.
 There is only one type of test, which needs all the dependencies running for them to be successful.

@@ -2,7 +2,6 @@ package acquiringbank
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"github.com/marioarizaj/payment_gateway/internal/config"
 	"io"
@@ -13,8 +12,6 @@ import (
 	"github.com/marioarizaj/payment_gateway"
 )
 
-var notFoundError = errors.New("not found")
-
 type paymentsStore struct {
 	cache map[string]payment_gateway.Payment
 	lock  *sync.Mutex
@@ -24,15 +21,6 @@ func (p *paymentsStore) set(key string, value payment_gateway.Payment) {
 	p.lock.Lock()
 	p.cache[key] = value
 	p.lock.Unlock()
-}
-
-func (p *paymentsStore) get(key string) (payment_gateway.Payment, error) {
-	p.lock.Lock()
-	defer p.lock.Unlock()
-	if value, found := p.cache[key]; found {
-		return value, nil
-	}
-	return payment_gateway.Payment{}, notFoundError
 }
 
 type MockClient struct {
