@@ -1,16 +1,11 @@
 package config
 
 import (
-	"io/fs"
-	"log"
-	"os"
-	"path"
-	"path/filepath"
-	"runtime"
-	"strings"
-
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
+	"log"
+	"os"
+	"regexp"
 )
 
 const (
@@ -79,19 +74,8 @@ type Config struct {
 
 func LoadConfig() (Config, error) {
 	appEnv := getAppEnv()
-	var envPath []string
 	if appEnv == testEnv || appEnv == devEnv {
-		// To run this locally, we need to open .env
-		err := filepath.Walk(os.ExpandEnv("$GOPATH/src"), func(path string, info fs.FileInfo, err error) error {
-			if strings.Contains(path, projectName) && strings.Contains(path, ".env") && !strings.Contains(path, "docker") {
-				envPath = append(envPath, path)
-			}
-			return nil
-		})
-		if err != nil {
-			log.Println("could not open .env file, skipping")
-		}
-		err = godotenv.Load(envPath...)
+		err := loadEnv()
 		if err != nil {
 			log.Println("could not open .env file, skipping")
 		}
@@ -101,10 +85,15 @@ func LoadConfig() (Config, error) {
 	return config, err
 }
 
-func RootDir() string {
-	_, b, _, _ := runtime.Caller(1)
-	d := path.Join(path.Dir(b))
-	return filepath.Dir(d)
+func loadEnv() error {
+	prj := regexp.MustCompile(`^(.*` + projectName + `)`)
+	currentWorkDirectory, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	rootPath := prj.Find([]byte(currentWorkDirectory))
+
+	return godotenv.Load(string(rootPath) + `/.env`)
 }
 
 func getAppEnv() string {

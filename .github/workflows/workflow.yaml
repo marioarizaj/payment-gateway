@@ -65,5 +65,6 @@ jobs:
           SERVER_IDLE_TIMEOUT: 30
           SERVER_READ_TIMEOUT: 2
           SERVER_WRITE_TIMEOUT: 2
+          APP_ENV: docker
         # Run tests with coverage
         run: go test --race -cover ./...
