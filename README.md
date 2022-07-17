@@ -63,6 +63,8 @@ The first step is the same for both options:
 3. Now you can start sending requests to the server. There is a sample `Postman` collection export under the `postman` directory.
 4. Please see Security section on how authentication works when sending requests.
 5. NOTE: Do not forget to update `.env` and `.env.docker` if any of the port mappings are updated on compose.
+6. <strong> NOTE: The docker builds fine on all MacBook types and AMD64 architecture on Linux, but fails on Ubuntu ARM64. </strong> 
+<strong>To build for Ubuntu ARM64 please do change GOARCH when building the Go executable on Dockerfile to arm64 from amd64.</strong>
 ### On the machine
 1. Download and install [golang](https://go.dev/dl/) for you OS.
 2. Download and install [redis](https://redis.io/download/).
