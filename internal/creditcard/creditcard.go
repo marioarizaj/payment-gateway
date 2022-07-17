@@ -50,8 +50,11 @@ func (c *Card) Validate() error {
 // ValidateExpiration validates the credit card's expiration date
 func (c *Card) ValidateExpiration() error {
 	timeNow := time.Now()
-
-	year := c.Year + 2000
+	nrDigits := getDigits(c.Year)
+	year := c.Year
+	if nrDigits == 2 {
+		year = c.Year + 2000
+	}
 
 	if c.Month < 1 || 12 < c.Month {
 		return errors.New("invalid month")
@@ -66,6 +69,15 @@ func (c *Card) ValidateExpiration() error {
 	}
 
 	return nil
+}
+
+func getDigits(year int) int {
+	count := 0
+	for year > 0 {
+		year = year / 10
+		count++
+	}
+	return count
 }
 
 // ValidateCVV validates the length of the card's CVV value
