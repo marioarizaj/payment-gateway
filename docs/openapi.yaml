@@ -49,6 +49,11 @@ components:
             - succeeded
             - failed
           readOnly: true
+        failed_reason:
+          type: string
+          description: When the status of the payment is failed, this field will contain the reason.
+          example: Insufficient funds
+          readOnly: true
         description:
           description: The description of the payment.
           type: string
