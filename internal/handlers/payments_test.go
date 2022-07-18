@@ -235,7 +235,7 @@ func compareResults(t *testing.T, expected payment_gateway.Payment, actual payme
 	expected.CreatedAt = actual.CreatedAt
 	expected.UpdatedAt = actual.UpdatedAt
 	expected.CardInfo.CVV = ""
-
+	expected.CardInfo.CardNumber = payment_gateway.MaskCreditCard(expected.CardInfo.CardNumber)
 	assert.Equal(t, expected, actual)
 }
 

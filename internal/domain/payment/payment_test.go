@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -179,11 +180,13 @@ func TestDomain_CreatePayment(t *testing.T) {
 
 				createdPayment, err := domain.CreatePayment(ctx, p)
 				if err != nil {
+					fmt.Println("Error here", err)
 					return payment_gateway.Payment{}, err
 				}
 				// Now let's change the amount, but keep the same id, so we pass redis validation, but fail on the db one
 				createdPayment.Amount.AmountFractional = 3000
 				createdPayment.CardInfo.CVV = p.CardInfo.CVV
+				createdPayment.CardInfo.CardNumber = baseTestPayment.CardInfo.CardNumber
 				return createdPayment, nil
 			},
 			expectedError: responses.ConflictError{},
@@ -202,6 +205,7 @@ func TestDomain_CreatePayment(t *testing.T) {
 				// Now let's change the amount, but keep the same id, so we pass redis validation, but fail on the db one
 				createdPayment.CardInfo.CVV = p.CardInfo.CVV
 				createdPayment.ID = uuid.New()
+				createdPayment.CardInfo.CardNumber = baseTestPayment.CardInfo.CardNumber
 				return createdPayment, nil
 			},
 			expectedError: responses.ConflictError{},
@@ -222,12 +226,14 @@ func TestDomain_CreatePayment(t *testing.T) {
 			}
 			createdPayment, err := d.CreatePayment(context.Background(), p)
 			if c.expectedError != nil {
+				fmt.Println(err.Error())
 				assert.Equal(t, c.expectedError, err)
 				if !c.shouldCreateRecord {
 					// Check that the record is not on database
 					_, err = d.GetPayment(context.Background(), p.ID)
 					assert.Equal(t, responses.NotFoundError{}, err)
 				}
+
 				return
 			}
 			// First verify that CVV is not returned
@@ -237,8 +243,11 @@ func TestDomain_CreatePayment(t *testing.T) {
 			// Force equal timestamps
 			p.CreatedAt = createdPayment.CreatedAt
 			p.UpdatedAt = createdPayment.UpdatedAt
+			// Expected masked card
+			p.CardInfo.CardNumber = payment_gateway.MaskCreditCard(p.CardInfo.CardNumber)
 
 			assert.Equal(t, p, createdPayment)
+
 			time.Sleep(time.Second)
 			// Let's wait a second, for the callback to update the database
 			newPayment, err := d.GetPayment(context.Background(), p.ID)
@@ -295,11 +304,15 @@ func TestDomain_GetPayment(t *testing.T) {
 				return
 			}
 			assert.NoError(t, err)
+			expectedPayment := c.payment
 			// Force equal timestamps
-			c.payment.CreatedAt = p.CreatedAt
-			c.payment.UpdatedAt = p.UpdatedAt
+			expectedPayment.CreatedAt = p.CreatedAt
+			expectedPayment.UpdatedAt = p.UpdatedAt
 			p.CardInfo.CVV = c.payment.CardInfo.CVV
-			assert.Equal(t, c.payment, p)
+			// Expected masked card
+			expectedPayment.CardInfo.CardNumber = payment_gateway.MaskCreditCard(p.CardInfo.CardNumber)
+
+			assert.Equal(t, expectedPayment, p)
 			// Verify that when we search for a second time, and cache returns the result,
 			// it returns the correct result
 			p, err = d.GetPayment(context.Background(), c.idToSearch)
@@ -309,10 +322,8 @@ func TestDomain_GetPayment(t *testing.T) {
 			}
 			assert.NoError(t, err)
 			// Force equal timestamps
-			c.payment.CreatedAt = p.CreatedAt
-			c.payment.UpdatedAt = p.UpdatedAt
-			p.CardInfo.CVV = c.payment.CardInfo.CVV
-			assert.Equal(t, c.payment, p)
+			expectedPayment.CardInfo.CVV = ""
+			assert.Equal(t, expectedPayment, p)
 		})
 	}
 }

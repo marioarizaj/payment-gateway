@@ -1,6 +1,7 @@
 package payment_gateway
 
 import (
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -62,6 +63,7 @@ func (p Payment) GetStoragePayment() *repositiory.Payment {
 }
 
 func GetPaymentFromStoredPayment(p *repositiory.Payment) Payment {
+	p.CardNumber = MaskCreditCard(p.CardNumber)
 	return Payment{
 		ID:            p.ID,
 		PaymentStatus: p.PaymentStatus,
@@ -81,4 +83,18 @@ func GetPaymentFromStoredPayment(p *repositiory.Payment) Payment {
 		CreatedAt: p.CreatedAt,
 		UpdatedAt: p.UpdatedAt,
 	}
+}
+
+// MaskCreditCard replaces all credit card numbers with *, besides the last 4.
+// Using a loop instead of regex because it seems much faster.
+func MaskCreditCard(cardNumber string) string {
+	maskedCard := strings.Builder{}
+	for i := range cardNumber {
+		if i < len(cardNumber)-4 {
+			maskedCard.WriteString("*")
+			continue
+		}
+		maskedCard.WriteString(string(cardNumber[i]))
+	}
+	return maskedCard.String()
 }
